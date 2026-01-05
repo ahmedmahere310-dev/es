@@ -2,426 +2,544 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Es Store | Shipping System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Infinity OS Duo - Ultimate Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #fcfcfc; color: #000; overflow-x: hidden; }
-        .logo-font { font-family: 'Playfair Display', serif; }
-        .hero-section {
-            background-image: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.2)), 
-                              url('https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
-            background-size: cover; background-position: center; border-radius: 2rem;
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap');
+        
+        :root {
+            --accent: #3b82f6;
+            --win-bg: rgba(15, 23, 42, 0.85);
+            --global-width: 200vw;
         }
-        .login-bg {
-            background-image: linear-gradient(rgba(0,0,0,0.9), rgba(0,0,0,0.9)), 
-                              url('https://images.pexels.com/photos/934070/pexels-photo-934070.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2');
-            background-size: cover; background-position: center;
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #020617;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+            touch-action: none;
+            user-select: none;
         }
-        .nav-link.active { color: #000; border-bottom: 2px solid #000; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #000; border-radius: 10px; }
-        .admin-stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
+
+        /* الفضاء العالمي الموحد */
+        #global-workspace {
+            position: absolute;
+            width: var(--global-width);
+            height: 100vh;
+            left: 0;
+            top: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
+                url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop') center/cover no-repeat;
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            z-index: 1;
+        }
+
+        /* شريط النظام العلوي */
+        .system-bar {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            height: 38px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(25px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 13px;
+            z-index: 10000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* النوافذ */
+        .window {
+            position: absolute;
+            background: var(--win-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .window.minimized {
+            opacity: 0;
+            transform: translateY(100px) scale(0.8);
+            pointer-events: none;
+        }
+
+        .window.active {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 30px 60px -12px rgba(0, 0, 0, 0.6);
+            z-index: 2000 !important;
+        }
+
+        .win-header {
+            padding: 12px 18px;
+            background: rgba(255,255,255,0.03);
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .win-body { flex: 1; position: relative; background: transparent; }
+        .win-body iframe { width: 100%; height: 100%; border: none; background: #fff; }
+
+        /* شريط المهام السفلي */
+        .dock-wrapper {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
+
+        .dock {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(30px);
+            padding: 10px 18px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .dock-item {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .dock-item:hover {
+            transform: translateY(-12px) scale(1.1);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .dock-item.running::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            width: 5px; height: 5px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--accent);
+        }
+
+        /* الإشعارات */
+        #notifications {
+            position: fixed;
+            top: 50px; left: 20px;
+            z-index: 11000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .notif {
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border-right: 4px solid var(--accent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            min-width: 250px;
+            transform: translateX(-150%);
+            transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            pointer-events: auto;
+        }
+        .notif.show { transform: translateX(0); }
+
+        /* المشغل (Launcher) */
+        #launcher {
+            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(40px);
+            width: 90%; max-width: 550px; padding: 30px; border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1); z-index: 10001; display: none;
+            grid-template-columns: repeat(4, 1fr); gap: 20px;
+            max-height: 70vh; overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+        }
+
+        .launcher-item {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 15px; border-radius: 18px; transition: 0.3s; cursor: pointer;
+        }
+        .launcher-item:hover { background: rgba(255,255,255,0.08); transform: scale(1.05); }
+
+        .resizer {
+            position: absolute; right: 0; bottom: 0; width: 15px; height: 15px;
+            cursor: nwse-resize; z-index: 100;
+        }
+
+        .btn-circle { width: 13px; height: 13px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
+        .btn-circle:hover { filter: brightness(1.2); transform: scale(1.1); }
+
+        /* شات مدمج */
+        .chat-container { height: 100%; display: flex; flex-direction: column; background: #0f172a; }
+        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 13px; }
+        .msg.sent { align-self: flex-start; background: var(--accent); }
+        .msg.received { align-self: flex-end; background: #334155; }
     </style>
 </head>
 <body>
 
-    <!-- شاشة الدخول -->
-    <div id="login-screen" class="fixed inset-0 z-[300] flex items-center justify-center p-6 login-bg text-center">
-        <div class="max-w-md w-full">
-            <h1 class="logo-font text-[8rem] text-white leading-none mb-4 italic select-none">Es</h1>
-            <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl border-t-8 border-black">
-                <div id="step-1">
-                    <h2 class="text-xl font-black mb-6 italic text-zinc-800">Welcome to Es</h2>
-                    <input type="text" id="user-name-input" placeholder="اسم المستخدم" class="w-full px-6 py-4 rounded-xl bg-gray-100 mb-4 text-center font-bold outline-none focus:ring-2 ring-black">
-                    <button id="next-btn" class="w-full bg-black text-white py-4 rounded-xl font-black tracking-widest uppercase text-sm">Next</button>
-                </div>
-                <div id="step-2" class="hidden">
-                    <h2 id="auth-title" class="text-xl font-black mb-6">Security Check</h2>
-                    <input type="password" id="user-pass-input" placeholder="••••••••" class="w-full px-6 py-4 rounded-xl bg-gray-100 mb-4 text-center font-bold outline-none focus:ring-2 ring-black">
-                    <button id="auth-final-btn" class="w-full bg-black text-white py-4 rounded-xl font-black tracking-widest uppercase text-sm">Verify</button>
-                </div>
+    <!-- شريط الإشعارات -->
+    <div id="notifications"></div>
+
+    <div class="system-bar">
+        <div class="flex items-center gap-4">
+            <i class="fas fa-atom text-blue-400 animate-pulse"></i>
+            <span class="font-bold tracking-tighter">INFINITY <span class="text-blue-400">ULTIMATE</span></span>
+            <div class="flex gap-2 bg-white/5 p-1 rounded-full px-3 border border-white/10 ml-4">
+                <span id="d0" class="cursor-pointer opacity-100 font-bold text-xs" onclick="switchDevice(0)">NODE A</span>
+                <span id="d1" class="cursor-pointer opacity-40 text-xs" onclick="switchDevice(1)">NODE B</span>
             </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 text-[11px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20">
+                <div class="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                ONLINE
+            </div>
+            <span id="clock" class="font-mono font-bold">00:00:00</span>
+            <i class="fas fa-signal text-blue-400"></i>
         </div>
     </div>
 
-    <!-- تطبيق الأدمن والمستخدم -->
-    <div id="main-app" class="hidden min-h-screen flex flex-col">
-        
-        <header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-md border-b">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex justify-between items-center">
-                <div class="flex items-center gap-6 sm:gap-10">
-                    <span class="logo-font text-3xl sm:text-4xl font-black italic">Es</span>
-                    <nav class="hidden sm:flex gap-6">
-                        <span onclick="showPage('home')" id="link-home" class="nav-link active cursor-pointer font-black text-xs uppercase tracking-widest">Shop</span>
-                        <span onclick="showPage('orders')" id="link-orders" class="nav-link cursor-pointer font-black text-xs uppercase tracking-widest">My Orders</span>
-                    </nav>
-                </div>
-                
-                <div class="flex items-center gap-3">
-                    <button id="admin-toggle-btn" class="hidden bg-red-600 hover:bg-black text-white px-4 py-2 rounded-full font-black text-[9px] uppercase tracking-widest shadow-lg transition-all">
-                        Control Center
-                    </button>
+    <div id="global-workspace"></div>
 
-                    <button id="cart-trigger" class="relative p-3 bg-black text-white rounded-full transition-transform hover:scale-110">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                        <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
-                    </button>
-                    
-                    <button id="logout-btn" class="p-2 text-gray-300 hover:text-black">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- لوحة التحكم الأدمن -->
-        <div id="admin-panel" class="hidden bg-zinc-950 text-white border-b-8 border-black shadow-2xl">
-            <div class="max-w-7xl mx-auto px-6 py-12">
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10 text-center">
-                    <div class="admin-stat-card p-6 rounded-2xl">
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1">Total Items</p>
-                        <h4 id="stat-products" class="text-3xl font-black italic logo-font">0</h4>
-                    </div>
-                    <div class="admin-stat-card p-6 rounded-2xl">
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1">Live Orders</p>
-                        <h4 id="stat-orders" class="text-3xl font-black italic logo-font">0</h4>
-                    </div>
-                    <div class="admin-stat-card p-6 rounded-2xl">
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1">Expected Revenue</p>
-                        <h4 id="stat-revenue" class="text-3xl font-black italic logo-font">0</h4>
-                    </div>
-                    <div class="admin-stat-card p-6 rounded-2xl">
-                        <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1">Status</p>
-                        <h4 class="text-xs font-black text-green-500 uppercase">Secured</h4>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <div class="lg:col-span-4 bg-zinc-900/50 p-8 rounded-[2rem] border border-zinc-800">
-                        <h3 class="text-[10px] font-black uppercase text-zinc-500 mb-6 tracking-widest">Inventory Management</h3>
-                        <div class="space-y-4">
-                            <input type="text" id="p-name" placeholder="Product Name" class="w-full bg-black/50 border border-zinc-800 p-4 rounded-xl outline-none text-sm font-bold">
-                            <input type="number" id="p-price" placeholder="Price (EGP)" class="w-full bg-black/50 border border-zinc-800 p-4 rounded-xl outline-none text-sm font-bold">
-                            <input type="text" id="p-image" placeholder="Image URL" class="w-full bg-black/50 border border-zinc-800 p-4 rounded-xl outline-none text-[10px] text-zinc-400">
-                            <button id="add-product-btn" class="w-full bg-white text-black py-4 rounded-xl font-black uppercase text-xs">Add Product</button>
-                        </div>
-                    </div>
-                    <div class="lg:col-span-8 bg-zinc-900/50 p-8 rounded-[2rem] border border-zinc-800 h-[500px] flex flex-col">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-[10px] font-black uppercase text-zinc-500 tracking-widest">Customer Requests (Detailed)</h3>
-                            <button onclick="window.clearAllOrders()" class="text-[9px] font-bold text-red-500 uppercase">Clear All</button>
-                        </div>
-                        <div id="all-orders-admin" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-3"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <main id="page-home" class="flex-1 max-w-7xl mx-auto px-6 py-10 w-full">
-            <div class="hero-section p-10 sm:p-20 mb-12 min-h-[350px] flex flex-col justify-end shadow-2xl overflow-hidden">
-                <p class="text-[10px] font-black uppercase tracking-[0.5em] mb-4 text-black/60">New Collection</p>
-                <h2 class="text-6xl sm:text-8xl font-black italic logo-font text-black leading-none mb-6">Es House</h2>
-            </div>
-            <div id="products-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-8"></div>
-        </main>
-
-        <main id="page-orders" class="hidden flex-1 max-w-4xl mx-auto px-6 py-12 w-full">
-            <h2 class="text-4xl font-black italic logo-font mb-10 text-center uppercase">History</h2>
-            <div id="my-orders-list" class="space-y-4"></div>
-        </main>
+    <div id="launcher" class="grid">
+        <!-- يتم ملؤه بواسطة JavaScript -->
     </div>
 
-    <!-- مودال بيانات الشحن -->
-    <div id="shipping-modal" class="fixed inset-0 z-[400] bg-black/90 hidden flex items-center justify-center p-6">
-        <div class="bg-white max-w-lg w-full rounded-[2.5rem] p-10 relative">
-            <h2 class="text-3xl font-black italic logo-font mb-2">Shipping Details</h2>
-            <p class="text-zinc-400 text-xs font-bold mb-8 uppercase tracking-widest">نحتاج لهذه البيانات لتوصيل طلبك</p>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-black uppercase mb-1 block text-zinc-400 tracking-widest">الاسم بالكامل</label>
-                    <input type="text" id="ship-fullname" class="w-full bg-zinc-50 border p-4 rounded-xl font-bold outline-none focus:ring-2 ring-black">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase mb-1 block text-zinc-400 tracking-widest">رقم الهاتف</label>
-                    <input type="tel" id="ship-phone" class="w-full bg-zinc-50 border p-4 rounded-xl font-bold outline-none focus:ring-2 ring-black">
-                </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase mb-1 block text-zinc-400 tracking-widest">العنوان التفصيلي</label>
-                    <textarea id="ship-address" class="w-full bg-zinc-50 border p-4 rounded-xl font-bold outline-none focus:ring-2 ring-black h-24 resize-none"></textarea>
-                </div>
-                <button id="save-shipping-btn" class="w-full bg-black text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-xl">Confirm & Order</button>
-                <button onclick="document.getElementById('shipping-modal').classList.add('hidden')" class="w-full text-zinc-400 text-xs font-bold mt-2 hover:text-black">Cancel</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- درج السلة -->
-    <div id="cart-drawer" class="fixed inset-0 z-[200] bg-black/80 hidden">
-        <div id="cart-inner" class="absolute left-0 top-0 h-full w-full max-w-sm bg-white p-10 flex flex-col transform translate-x-full transition-transform duration-500">
-            <div class="flex justify-between items-center mb-10">
-                <h2 class="text-3xl font-black italic logo-font">Bag</h2>
-                <button id="cart-close" class="text-4xl">&times;</button>
-            </div>
-            <div id="cart-items" class="flex-1 overflow-y-auto space-y-8 custom-scrollbar"></div>
-            <div class="pt-8 border-t mt-8">
-                <div class="flex justify-between font-black text-2xl italic mb-8">
-                    <span class="text-sm font-bold uppercase text-zinc-400 tracking-widest">Total</span>
-                    <span id="cart-total">0 EGP</span>
-                </div>
-                <button id="checkout-btn" class="w-full bg-black text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95">Checkout Now</button>
-            </div>
+    <div class="dock-wrapper">
+        <div class="dock" id="main-dock">
+            <div class="dock-item bg-white/10" onclick="toggleLauncher()"><i class="fas fa-shapes text-blue-400"></i></div>
+            <div class="w-[1px] h-8 bg-white/10 mx-1"></div>
+            <div class="dock-item bg-blue-600 shadow-lg shadow-blue-900/40" id="dock-google" onclick="launch('google')"><i class="fab fa-google"></i></div>
+            <div class="dock-item bg-indigo-600 shadow-lg shadow-indigo-900/40" id="dock-code" onclick="launch('code')"><i class="fas fa-terminal"></i></div>
+            <div class="dock-item bg-pink-600 shadow-lg shadow-pink-900/40" id="dock-chat" onclick="launch('chat')"><i class="fas fa-comments"></i></div>
+            <div class="dock-item bg-emerald-600 shadow-lg shadow-emerald-900/40" id="dock-games" onclick="launch('games')"><i class="fas fa-gamepad"></i></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-        import { getDatabase, ref, set, onValue, push, remove, get } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, onChildAdded, onChildRemoved, onChildChanged, push } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
+        // استخدام نفس الإعدادات الأصلية
         const firebaseConfig = {
-            apiKey: "AIzaSyCRVGDn1M_zy5p7HGsNV0dLweMKRs_5JzA",
-            authDomain: "elshla.firebaseapp.com",
-            databaseURL: "https://elshla-default-rtdb.firebaseio.com",
-            projectId: "elshla",
-            storageBucket: "elshla.firebasestorage.app",
-            messagingSenderId: "225364230201",
-            appId: "1:225364230201:web:ffa36b14888763a1e64de8"
+            apiKey: "AIzaSyAsExo8GR-YjB7FgpX3yDzVCiv3UADyDpQ",
+            authDomain: "coffee-spark-ai-barista-370d0.firebaseapp.com",
+            databaseURL: "https://coffee-spark-ai-barista-370d0-default-rtdb.firebaseio.com",
+            projectId: "coffee-spark-ai-barista-370d0",
+            storageBucket: "coffee-spark-ai-barista-370d0.firebasestorage.app",
+            messagingSenderId: "533681293642",
+            appId: "1:533681293642:web:fc1901fe139ff6156859b3"
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const rdb = getDatabase(app);
-        const DB_ROOT = "es_v_final_shipping_v1";
+        const db = getDatabase(app);
+        const winRef = ref(db, 'infinity_pro_v4/windows');
+        const chatRef = ref(db, 'infinity_pro_v4/chat');
+        const workspace = document.getElementById('global-workspace');
+        
+        let zIndexTop = 1000;
+        let activeOffset = 0;
+        let currentDevice = 0;
 
-        let profile = null; let cart = [];
-
-        // إدارة الدخول
-        document.getElementById('next-btn').onclick = async () => {
-            const name = document.getElementById('user-name-input').value.trim();
-            if(!name) return;
-            const snap = await get(ref(rdb, `${DB_ROOT}/users/${name}`));
-            if(snap.exists()) document.getElementById('auth-title').innerText = "Hello, " + name;
-            document.getElementById('step-1').classList.add('hidden');
-            document.getElementById('step-2').classList.remove('hidden');
+        const appLibrary = {
+            google: { name: 'البحث الذكي', icon: 'fa-google', url: 'https://www.google.com/search?igu=1', color: 'bg-blue-600' },
+            chat: { name: 'المحادثة العالمية', icon: 'fa-comments', type: 'chat', color: 'bg-pink-600' },
+            code: { name: 'المحرر البرمجي', icon: 'fa-terminal', type: 'editor', color: 'bg-indigo-600' },
+            youtube: { name: 'يوتيوب برو', icon: 'fa-youtube', url: 'https://www.youtube.com/embed/jfKfPfyJRdk', color: 'bg-red-600' },
+            chatgpt: { name: 'ChatGPT', icon: 'fa-robot', url: 'https://duckduckgo.com/?q=ChatGPT&ia=chat', color: 'bg-emerald-700' },
+            spotify: { name: 'الموسيقى', icon: 'fa-spotify', url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM3M', color: 'bg-green-600' },
+            maps: { name: 'الخرائط', icon: 'fa-map-location-dot', url: 'https://www.google.com/maps/embed', color: 'bg-orange-600' },
+            games: { name: 'ألعاب سريعة', icon: 'fa-gamepad', url: 'https://play2048.co', color: 'bg-amber-600' },
+            paint: { name: 'الرسم الرقمي', icon: 'fa-palette', url: 'https://kleki.com', color: 'bg-purple-600' },
+            calc: { name: 'الحاسبة', icon: 'fa-calculator', url: 'https://www.desmos.com/scientific', color: 'bg-slate-700' },
+            weather: { name: 'الطقس', icon: 'fa-cloud-sun', url: 'https://www.weather.com', color: 'bg-sky-500' },
+            settings: { name: 'الإعدادات', icon: 'fa-cog', type: 'settings', color: 'bg-gray-700' }
         };
 
-        document.getElementById('auth-final-btn').onclick = async () => {
-            const name = document.getElementById('user-name-input').value.trim();
-            const pass = document.getElementById('user-pass-input').value.trim();
-            const snap = await get(ref(rdb, `${DB_ROOT}/users/${name}`));
-            
-            if(snap.exists()) {
-                if(snap.val().password !== pass) { alert("Invalid Password"); return; }
-            } else {
-                await signInAnonymously(auth);
-                await set(ref(rdb, `${DB_ROOT}/users/${name}`), { name, password: pass, role: "user" });
-            }
-            localStorage.setItem('es_user_active_id', name);
-            location.reload();
+        // نظام الإشعارات
+        window.notify = (msg, icon = 'fa-info-circle') => {
+            const container = document.getElementById('notifications');
+            const n = document.createElement('div');
+            n.className = 'notif';
+            n.innerHTML = `<i class="fas ${icon} ml-2 text-blue-400"></i> ${msg}`;
+            container.appendChild(n);
+            setTimeout(() => n.classList.add('show'), 100);
+            setTimeout(() => {
+                n.classList.remove('show');
+                setTimeout(() => n.remove(), 500);
+            }, 4000);
         };
 
-        onAuthStateChanged(auth, (user) => {
-            const saved = localStorage.getItem('es_user_active_id');
-            if(saved) {
-                onValue(ref(rdb, `${DB_ROOT}/users/${saved}`), (snap) => {
-                    profile = snap.val();
-                    if(profile) {
-                        document.getElementById('login-screen').classList.add('hidden');
-                        document.getElementById('main-app').classList.remove('hidden');
-                        
-                        if(profile.role === 'admin') {
-                            document.getElementById('admin-toggle-btn').classList.remove('hidden');
-                            loadAdminData();
-                        }
-                        loadStore(); loadMyOrders();
-                    }
-                });
-            }
+        // بناء الـ Launcher
+        const launcher = document.getElementById('launcher');
+        Object.keys(appLibrary).forEach(key => {
+            const item = document.createElement('div');
+            item.className = 'launcher-item';
+            item.onclick = () => { launch(key); toggleLauncher(); };
+            item.innerHTML = `
+                <div class="w-14 h-14 ${appLibrary[key].color} rounded-2xl flex items-center justify-center mb-2 shadow-xl">
+                    <i class="${appLibrary[key].icon.startsWith('fa-') ? 'fas ' + appLibrary[key].icon : 'fab ' + appLibrary[key].icon} text-2xl text-white"></i>
+                </div>
+                <span class="text-[10px] font-bold text-center text-white/90">${appLibrary[key].name}</span>
+            `;
+            launcher.appendChild(item);
         });
 
-        // لوحة التحكم
-        document.getElementById('admin-toggle-btn').onclick = () => {
-            document.getElementById('admin-panel').classList.toggle('hidden');
+        window.toggleLauncher = () => {
+            const isVisible = launcher.style.display === 'grid';
+            launcher.style.display = isVisible ? 'none' : 'grid';
+            if(!isVisible) launcher.style.animation = 'fadeInUp 0.3s ease-out';
         };
 
-        function loadStore() {
-            onValue(ref(rdb, `${DB_ROOT}/products`), (snap) => {
-                const grid = document.getElementById('products-grid'); grid.innerHTML = '';
-                const data = snap.val(); if(!data) return;
-                let c = 0;
-                Object.keys(data).forEach(id => {
-                    const p = data[id]; c++;
-                    grid.innerHTML += `
-                        <div class="group relative">
-                            <div class="aspect-[4/5] rounded-3xl overflow-hidden bg-zinc-100 mb-4 relative shadow-sm border border-zinc-100">
-                                <img src="${p.image || 'https://images.pexels.com/photos/157675/fashion-men-s-individuality-black-and-white-157675.jpeg?auto=compress&cs=tinysrgb&w=800'}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                                <button onclick="window.addToCart('${id}', '${p.name}', ${p.price})" class="absolute bottom-4 left-4 right-4 bg-white/95 py-3 rounded-2xl font-black text-[10px] uppercase opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all shadow-xl">Quick Buy</button>
-                                ${profile && profile.role === 'admin' ? `<button onclick="window.delP('${id}')" class="absolute top-4 right-4 bg-red-500 text-white w-6 h-6 rounded-full text-xs font-bold leading-none">×</button>` : ''}
-                            </div>
-                            <h4 class="font-black italic uppercase text-xs tracking-tighter truncate px-2">${p.name}</h4>
-                            <p class="text-zinc-400 font-bold text-[10px] px-2 italic">${p.price} EGP</p>
-                        </div>`;
-                });
-                if(profile && profile.role === 'admin') document.getElementById('stat-products').innerText = c;
-            });
-        }
-
-        // إحصائيات الأدمن والطلبات
-        function loadAdminData() {
-            onValue(ref(rdb, `${DB_ROOT}/orders`), (snap) => {
-                const container = document.getElementById('all-orders-admin'); container.innerHTML = '';
-                const data = snap.val(); 
-                if(!data) { document.getElementById('stat-orders').innerText = "0"; document.getElementById('stat-revenue').innerText = "0"; return; }
-
-                let rev = 0; let count = 0;
-                Object.keys(data).reverse().forEach(id => {
-                    const o = data[id]; count++;
-                    rev += parseInt(o.total.replace(/\D/g,''));
-                    container.innerHTML += `
-                        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-3xl">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 class="font-black italic text-sm text-white">${o.userName}</h4>
-                                    <p class="text-[10px] text-zinc-500 uppercase font-bold tracking-widest">${new Date(o.timestamp).toLocaleString()}</p>
-                                </div>
-                                <span class="bg-white/10 px-4 py-1 rounded-full text-[10px] font-black italic uppercase tracking-widest">${o.total}</span>
-                            </div>
-                            <!-- تفاصيل الشحن للأدمن -->
-                            <div class="bg-black/40 p-4 rounded-xl mb-4 space-y-2 border border-zinc-800/50">
-                                <div class="flex gap-2"><span class="text-[9px] font-black text-red-500 uppercase w-12">Phone:</span><span class="text-[10px] font-bold text-zinc-300">${o.shipping.phone}</span></div>
-                                <div class="flex gap-2"><span class="text-[9px] font-black text-red-500 uppercase w-12">Address:</span><span class="text-[10px] font-bold text-zinc-300 leading-relaxed">${o.shipping.address}</span></div>
-                            </div>
-                            <div class="text-[9px] text-zinc-400 font-bold mb-4 uppercase tracking-widest border-l-2 border-red-500 pl-3">
-                                ${o.items.map(i => `${i.qty}x ${i.name}`).join(' | ')}
-                            </div>
-                            <button onclick="window.delO('${id}')" class="w-full bg-red-600/10 text-red-600 hover:bg-red-600 hover:text-white py-3 rounded-xl text-[10px] font-black uppercase transition-all tracking-widest">Mark as Delivered</button>
-                        </div>`;
-                });
-                document.getElementById('stat-orders').innerText = count;
-                document.getElementById('stat-revenue').innerText = rev.toLocaleString() + " EGP";
-            });
-        }
-
-        function loadMyOrders() {
-            onValue(ref(rdb, `${DB_ROOT}/orders`), (snap) => {
-                const list = document.getElementById('my-orders-list'); list.innerHTML = '';
-                const data = snap.val(); if(!data) return;
-                Object.values(data).filter(o => o.userName === profile.name).reverse().forEach(o => {
-                    list.innerHTML += `<div class="bg-white p-6 rounded-[2rem] border shadow-sm flex flex-col sm:flex-row justify-between items-center group">
-                        <div class="flex items-center gap-6">
-                            <div class="h-10 w-1 bg-black group-hover:bg-red-500 transition-colors"></div>
-                            <div>
-                                <p class="text-[9px] text-zinc-400 font-black uppercase tracking-[0.3em] mb-1">Confirmed Purchase</p>
-                                <h4 class="font-black italic text-sm">${o.items.map(i=>`${i.qty}x ${i.name}`).join(' & ')}</h4>
-                            </div>
-                        </div>
-                        <div class="mt-4 sm:mt-0 font-black italic text-xl">${o.total}</div>
-                    </div>`;
-                });
-            });
-        }
-
-        // إدارة السلة والكميات
-        window.addToCart = (id, n, p) => {
-            const exists = cart.find(i => i.id === id);
-            if(exists) exists.qty++;
-            else cart.push({id, name:n, price:p, qty:1});
-            syncUI();
-        };
-
-        window.qtyChange = (idx, delta) => {
-            cart[idx].qty += delta;
-            if(cart[idx].qty < 1) cart.splice(idx, 1);
-            syncUI();
-        };
-
-        function syncUI() {
-            document.getElementById('cart-count').innerText = cart.length;
-            const items = document.getElementById('cart-items'); items.innerHTML = ''; let t = 0;
-            cart.forEach((item, idx) => {
-                t += (item.price * item.qty);
-                items.innerHTML += `
-                    <div class="flex justify-between items-center">
-                        <div class="text-right">
-                            <p class="font-black italic text-xs uppercase mb-1">${item.name}</p>
-                            <p class="text-[10px] text-zinc-400 font-bold italic">${item.price} EGP</p>
-                        </div>
-                        <div class="flex items-center gap-4 bg-zinc-50 px-3 py-1 rounded-full border">
-                            <button onclick="window.qtyChange(${idx}, -1)" class="font-black text-xl leading-none text-zinc-300">-</button>
-                            <span class="font-black text-sm italic">${item.qty}</span>
-                            <button onclick="window.qtyChange(${idx}, 1)" class="font-black text-xl leading-none text-zinc-300">+</button>
-                        </div>
-                    </div>`;
-            });
-            document.getElementById('cart-total').innerText = t + " EGP";
-        }
-
-        // عملية إتمام الطلب (Checkout)
-        document.getElementById('checkout-btn').onclick = () => {
-            if(cart.length === 0) return;
+        window.launch = (key) => {
+            const id = 'win_' + key + '_' + Date.now(); 
+            const data = appLibrary[key];
+            const spawnX = Math.abs(activeOffset) + 100 + (Math.random() * 50);
             
-            // تحقق من وجود بيانات محفوظة
-            const savedShipping = localStorage.getItem('es_shipping_data');
-            if(savedShipping) {
-                const data = JSON.parse(savedShipping);
-                document.getElementById('ship-fullname').value = data.name || "";
-                document.getElementById('ship-phone').value = data.phone || "";
-                document.getElementById('ship-address').value = data.address || "";
+            set(ref(db, `infinity_pro_v4/windows/${id}`), {
+                id, title: data.name, icon: data.icon, 
+                url: data.url || '', type: data.type || 'web',
+                x: spawnX, y: 80, w: 800, h: 500, z: zIndexTop++,
+                state: 'normal', owner: currentDevice
+            });
+            notify(`تم تشغيل ${data.name}`, data.icon);
+        };
+
+        onChildAdded(winRef, (snap) => createWin(snap.val()));
+        onChildRemoved(winRef, (snap) => {
+            document.getElementById(snap.key)?.remove();
+            const baseKey = snap.key.split('_')[1];
+            document.getElementById(`dock-${baseKey}`)?.classList.remove('running');
+        });
+        onChildChanged(winRef, (snap) => updateWinUI(snap.val()));
+
+        function createWin(data) {
+            if (document.getElementById(data.id)) return;
+            const win = document.createElement('div');
+            win.id = data.id;
+            win.className = 'window';
+            
+            let content = '';
+            if (data.type === 'editor') {
+                content = `
+                <div class="flex flex-col h-full bg-[#0a0f1d]">
+                    <div class="flex gap-2 p-2 bg-white/5 border-b border-white/10">
+                        <button class="px-3 py-1 bg-blue-600 rounded text-[10px]" onclick="notify('تم حفظ المسودة')">SAVE</button>
+                        <button class="px-3 py-1 bg-white/10 rounded text-[10px]" onclick="this.parentElement.nextElementSibling.value=''">CLEAR</button>
+                    </div>
+                    <textarea class="w-full flex-1 p-6 bg-transparent text-emerald-400 font-mono text-sm border-none outline-none resize-none" placeholder="// اكتب الكود هنا..."></textarea>
+                </div>`;
+            } else if (data.type === 'chat') {
+                content = `
+                <div class="chat-container">
+                    <div id="chat-messages"></div>
+                    <div class="p-3 bg-white/5 border-t border-white/10 flex gap-2">
+                        <input type="text" id="chat-input-${data.id}" class="flex-1 bg-white/10 border-none rounded-lg px-4 text-sm outline-none" placeholder="اكتب رسالة...">
+                        <button onclick="sendMsg('${data.id}')" class="w-10 h-10 bg-blue-600 rounded-lg"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>`;
+            } else {
+                content = `<iframe src="${data.url}" loading="lazy"></iframe>`;
             }
+
+            win.innerHTML = `
+                <div class="win-header" id="hd-${data.id}">
+                    <div class="flex items-center gap-3">
+                        <i class="${data.icon.startsWith('fa-') ? 'fas ' + data.icon : 'fab ' + data.icon} text-blue-400 text-sm"></i>
+                        <span class="text-[11px] font-bold text-white/90 tracking-wide">${data.title}</span>
+                    </div>
+                    <div class="flex gap-2.5">
+                        <div class="btn-circle bg-yellow-500/80 border border-yellow-400/30" onclick="minWin('${data.id}')"></div>
+                        <div class="btn-circle bg-green-500/80 border border-green-400/30" onclick="maxWin('${data.id}')"></div>
+                        <div class="btn-circle bg-red-500/80 border border-red-400/30" onclick="closeWin('${data.id}')"></div>
+                    </div>
+                </div>
+                <div class="win-body">${content}</div>
+                <div class="resizer" id="rz-${data.id}"></div>
+            `;
+
+            workspace.appendChild(win);
+            const baseKey = data.id.split('_')[1];
+            document.getElementById(`dock-${baseKey}`)?.classList.add('running');
+            bindWinEvents(data.id);
+            updateWinUI(data);
+
+            if(data.type === 'chat') initChatUI(data.id);
+        }
+
+        function updateWinUI(data) {
+            const win = document.getElementById(data.id);
+            if(!win) return;
             
-            document.getElementById('shipping-modal').classList.remove('hidden');
-        };
+            win.style.zIndex = data.z;
+            if(data.state === 'minimized') {
+                win.classList.add('minimized');
+            } else if(data.state === 'maximized') {
+                win.classList.remove('minimized');
+                win.style.left = Math.abs(activeOffset) + 'px';
+                win.style.top = '38px';
+                win.style.width = '100vw';
+                win.style.height = 'calc(100vh - 38px)';
+                win.style.borderRadius = '0px';
+            } else {
+                win.classList.remove('minimized');
+                win.style.borderRadius = '16px';
+                win.style.left = data.x + 'px';
+                win.style.top = data.y + 'px';
+                win.style.width = data.w + 'px';
+                win.style.height = data.h + 'px';
+            }
+        }
 
-        document.getElementById('save-shipping-btn').onclick = async () => {
-            const name = document.getElementById('ship-fullname').value.trim();
-            const phone = document.getElementById('ship-phone').value.trim();
-            const addr = document.getElementById('ship-address').value.trim();
+        function bindWinEvents(id) {
+            const win = document.getElementById(id);
+            const header = document.getElementById(`hd-${id}`);
+            const resizer = document.getElementById(`rz-${id}`);
 
-            if(!name || !phone || !addr) { alert("يرجى إكمال جميع البيانات للشحن"); return; }
+            header.onmousedown = (e) => {
+                if(e.target.classList.contains('btn-circle')) return;
+                const dx = e.clientX - win.offsetLeft;
+                const dy = e.clientY - win.offsetTop;
+                win.classList.add('active');
+                update(ref(db, `infinity_pro_v4/windows/${id}`), { z: zIndexTop++, state: 'normal' });
 
-            const shippingData = { name, phone, address: addr };
-            localStorage.setItem('es_shipping_data', JSON.stringify(shippingData));
+                const move = (me) => {
+                    const nx = me.clientX - dx;
+                    const ny = me.clientY - dy;
+                    win.style.left = nx + 'px';
+                    win.style.top = ny + 'px';
+                    update(ref(db, `infinity_pro_v4/windows/${id}`), { x: nx, y: ny });
+                };
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', () => {
+                    document.removeEventListener('mousemove', move);
+                    win.classList.remove('active');
+                }, {once:true});
+            };
 
-            // إرسال الطلب
-            await push(ref(rdb, `${DB_ROOT}/orders`), {
-                userName: profile.name,
-                items: cart,
-                total: document.getElementById('cart-total').innerText,
-                shipping: shippingData,
-                timestamp: Date.now()
+            resizer.onmousedown = (e) => {
+                e.preventDefault();
+                const resize = (me) => {
+                    const nw = Math.max(400, me.clientX - win.offsetLeft);
+                    const nh = Math.max(300, me.clientY - win.offsetTop);
+                    win.style.width = nw + 'px';
+                    win.style.height = nh + 'px';
+                    update(ref(db, `infinity_pro_v4/windows/${id}`), { w: nw, h: nh });
+                };
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('mouseup', () => document.removeEventListener('mousemove', resize), {once:true});
+            };
+        }
+
+        // نظام المحادثة
+        window.sendMsg = (winId) => {
+            const input = document.getElementById(`chat-input-${winId}`);
+            if(!input.value.trim()) return;
+            push(chatRef, {
+                text: input.value,
+                sender: currentDevice === 0 ? 'NODE A' : 'NODE B',
+                time: Date.now()
             });
-
-            // مسح السلة وإغلاق المودالات
-            cart = []; syncUI();
-            document.getElementById('shipping-modal').classList.add('hidden');
-            document.getElementById('cart-close').click();
-            alert("تم إرسال طلبك بنجاح وسنتواصل معك للشحن!");
+            input.value = '';
         };
 
-        // وظائف عامة
-        window.delP = (id) => remove(ref(rdb, `${DB_ROOT}/products/${id}`));
-        window.delO = (id) => remove(ref(rdb, `${DB_ROOT}/orders/${id}`));
-        window.clearAllOrders = () => { if(confirm("Clear history?")) remove(ref(rdb, `${DB_ROOT}/orders`)); };
-        
-        window.showPage = (id) => {
-            document.querySelectorAll('main').forEach(m => m.classList.add('hidden'));
-            document.getElementById(`page-${id}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById(`link-${id}`).classList.add('active');
+        function initChatUI(winId) {
+            onValue(chatRef, (snap) => {
+                const box = document.querySelector(`#${winId} #chat-messages`);
+                if(!box) return;
+                box.innerHTML = '';
+                snap.forEach(child => {
+                    const m = child.val();
+                    const isMe = (m.sender === 'NODE A' && currentDevice === 0) || (m.sender === 'NODE B' && currentDevice === 1);
+                    const div = document.createElement('div');
+                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
+                    div.innerHTML = `<div class="text-[9px] opacity-50 mb-1">${m.sender}</div>${m.text}`;
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        window.closeWin = (id) => {
+            set(ref(db, `infinity_pro_v4/windows/${id}`), null);
+            notify("تم إغلاق النافذة");
+        };
+        window.minWin = (id) => update(ref(db, `infinity_pro_v4/windows/${id}`), { state: 'minimized' });
+        window.maxWin = (id) => {
+            const win = document.getElementById(id);
+            const isMax = win.style.width === '100vw';
+            update(ref(db, `infinity_pro_v4/windows/${id}`), { state: isMax ? 'normal' : 'maximized' });
         };
 
-        document.getElementById('cart-trigger').onclick = () => {
-            document.getElementById('cart-drawer').classList.remove('hidden');
-            setTimeout(() => document.getElementById('cart-inner').classList.remove('translate-x-full'), 10);
+        window.switchDevice = (idx) => {
+            currentDevice = idx;
+            activeOffset = idx * -100;
+            workspace.style.transform = `translateX(${activeOffset}vw)`;
+            document.getElementById('d0').style.opacity = idx === 0 ? '1' : '0.4';
+            document.getElementById('d0').style.fontWeight = idx === 0 ? 'bold' : 'normal';
+            document.getElementById('d1').style.opacity = idx === 1 ? '1' : '0.4';
+            document.getElementById('d1').style.fontWeight = idx === 1 ? 'bold' : 'normal';
+            notify(`انتقلت إلى ${idx === 0 ? 'NODE A' : 'NODE B'}`);
         };
-        document.getElementById('cart-close').onclick = () => {
-            document.getElementById('cart-inner').classList.add('translate-x-full');
-            setTimeout(() => document.getElementById('cart-drawer').classList.add('hidden'), 500);
-        };
-        document.getElementById('logout-btn').onclick = () => { localStorage.clear(); location.reload(); };
+
+        // تحديث الساعة بدقة
+        setInterval(() => {
+            const d = new Date();
+            document.getElementById('clock').innerText = 
+                d.getHours().toString().padStart(2, '0') + ":" + 
+                d.getMinutes().toString().padStart(2, '0') + ":" + 
+                d.getSeconds().toString().padStart(2, '0');
+        }, 1000);
+
+        // الترحيب
+        window.onload = () => notify("مرحباً بك في Infinity OS Ultimate", "fa-bolt");
+
+        // دعم اللمس المتقدم
+        document.addEventListener('touchstart', (e) => {
+            const h = e.target.closest('.win-header');
+            if(h) {
+                const w = h.parentElement;
+                const t = e.touches[0];
+                const dx = t.clientX - w.offsetLeft;
+                const dy = t.clientY - w.offsetTop;
+                const tm = (te) => {
+                    const mt = te.touches[0];
+                    const nx = mt.clientX - dx;
+                    const ny = mt.clientY - dy;
+                    w.style.left = nx + 'px';
+                    w.style.top = ny + 'px';
+                    update(ref(db, `infinity_pro_v4/windows/${w.id}`), { x: nx, y: ny, state: 'normal' });
+                };
+                document.addEventListener('touchmove', tm);
+                document.addEventListener('touchend', () => document.removeEventListener('touchmove', tm), {once:true});
+            }
+        }, {passive: true});
+
     </script>
 </body>
 </html>

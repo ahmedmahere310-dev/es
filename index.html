@@ -1,545 +1,79 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Infinity OS Duo - Ultimate Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&display=swap');
-        
-        :root {
-            --accent: #3b82f6;
-            --win-bg: rgba(15, 23, 42, 0.85);
-            --global-width: 200vw;
-        }
+  <meta charset="UTF-8">
+  <title>بُنيان | نظام المذاكرة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background: #020617;
-            margin: 0;
-            overflow: hidden;
-            height: 100vh;
-            color: white;
-            touch-action: none;
-            user-select: none;
-        }
-
-        /* الفضاء العالمي الموحد */
-        #global-workspace {
-            position: absolute;
-            width: var(--global-width);
-            height: 100vh;
-            left: 0;
-            top: 0;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 40%),
-                url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop') center/cover no-repeat;
-            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-            z-index: 1;
-        }
-
-        /* شريط النظام العلوي */
-        .system-bar {
-            position: fixed;
-            top: 0; left: 0; width: 100%;
-            height: 38px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(25px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 15px;
-            font-size: 13px;
-            z-index: 10000;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        /* النوافذ */
-        .window {
-            position: absolute;
-            background: var(--win-bg);
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 16px;
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.6);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 10;
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .window.minimized {
-            opacity: 0;
-            transform: translateY(100px) scale(0.8);
-            pointer-events: none;
-        }
-
-        .window.active {
-            border-color: rgba(59, 130, 246, 0.5);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2), 0 30px 60px -12px rgba(0, 0, 0, 0.6);
-            z-index: 2000 !important;
-        }
-
-        .win-header {
-            padding: 12px 18px;
-            background: rgba(255,255,255,0.03);
-            cursor: move;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-
-        .win-body { flex: 1; position: relative; background: transparent; }
-        .win-body iframe { width: 100%; height: 100%; border: none; background: #fff; }
-
-        /* شريط المهام السفلي */
-        .dock-wrapper {
-            position: fixed;
-            bottom: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-        }
-
-        .dock {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(30px);
-            padding: 10px 18px;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.1);
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .dock-item {
-            width: 48px; height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-        }
-
-        .dock-item:hover {
-            transform: translateY(-12px) scale(1.1);
-            background: rgba(255,255,255,0.15);
-        }
-
-        .dock-item.running::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            width: 5px; height: 5px;
-            background: var(--accent);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--accent);
-        }
-
-        /* الإشعارات */
-        #notifications {
-            position: fixed;
-            top: 50px; left: 20px;
-            z-index: 11000;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            pointer-events: none;
-        }
-        .notif {
-            background: rgba(15, 23, 42, 0.9);
-            backdrop-filter: blur(20px);
-            padding: 12px 20px;
-            border-radius: 12px;
-            border-right: 4px solid var(--accent);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            min-width: 250px;
-            transform: translateX(-150%);
-            transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            pointer-events: auto;
-        }
-        .notif.show { transform: translateX(0); }
-
-        /* المشغل (Launcher) */
-        #launcher {
-            position: fixed; bottom: 85px; left: 50%; transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(40px);
-            width: 90%; max-width: 550px; padding: 30px; border-radius: 30px;
-            border: 1px solid rgba(255,255,255,0.1); z-index: 10001; display: none;
-            grid-template-columns: repeat(4, 1fr); gap: 20px;
-            max-height: 70vh; overflow-y: auto;
-            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-        }
-
-        .launcher-item {
-            display: flex; flex-direction: column; align-items: center;
-            padding: 15px; border-radius: 18px; transition: 0.3s; cursor: pointer;
-        }
-        .launcher-item:hover { background: rgba(255,255,255,0.08); transform: scale(1.05); }
-
-        .resizer {
-            position: absolute; right: 0; bottom: 0; width: 15px; height: 15px;
-            cursor: nwse-resize; z-index: 100;
-        }
-
-        .btn-circle { width: 13px; height: 13px; border-radius: 50%; cursor: pointer; transition: 0.2s; }
-        .btn-circle:hover { filter: brightness(1.2); transform: scale(1.1); }
-
-        /* شات مدمج */
-        .chat-container { height: 100%; display: flex; flex-direction: column; background: #0f172a; }
-        #chat-messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 8px 12px; border-radius: 12px; max-width: 80%; font-size: 13px; }
-        .msg.sent { align-self: flex-start; background: var(--accent); }
-        .msg.received { align-self: flex-end; background: #334155; }
-    </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-    <!-- شريط الإشعارات -->
-    <div id="notifications"></div>
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-50 p-4">
+  <div class="glass flex justify-between items-center p-4">
+    <div>
+      <h1 class="text-xl font-black">🏗️ بُنيان</h1>
+      <p id="user-title" class="text-xs text-orange-400"></p>
+    </div>
+    <div class="text-sm">
+      LVL <span id="lvl-num">1</span> • XP <span id="ui-total-xp">0</span>
+    </div>
+  </div>
+</header>
 
-    <div class="system-bar">
-        <div class="flex items-center gap-4">
-            <i class="fas fa-atom text-blue-400 animate-pulse"></i>
-            <span class="font-bold tracking-tighter">INFINITY <span class="text-blue-400">ULTIMATE</span></span>
-            <div class="flex gap-2 bg-white/5 p-1 rounded-full px-3 border border-white/10 ml-4">
-                <span id="d0" class="cursor-pointer opacity-100 font-bold text-xs" onclick="switchDevice(0)">NODE A</span>
-                <span id="d1" class="cursor-pointer opacity-40 text-xs" onclick="switchDevice(1)">NODE B</span>
-            </div>
-        </div>
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 text-[11px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20">
-                <div class="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
-                ONLINE
-            </div>
-            <span id="clock" class="font-mono font-bold">00:00:00</span>
-            <i class="fas fa-signal text-blue-400"></i>
-        </div>
+<!-- ===== NAV ===== -->
+<nav class="fixed bottom-4 left-1/2 -translate-x-1/2 glass flex gap-2 p-2">
+  <button onclick="switchTab('dashboard')" class="tab-btn active">🏠</button>
+  <button onclick="switchTab('study')" class="tab-btn">📚</button>
+  <button onclick="switchTab('focus')" class="tab-btn">⏱️</button>
+  <button onclick="switchTab('store')" class="tab-btn">🛒</button>
+</nav>
+
+<!-- ===== CONTENT ===== -->
+<main class="max-w-xl mx-auto p-4 pb-32">
+
+  <!-- DASHBOARD -->
+  <section id="dashboard" class="tab active space-y-4">
+    <div class="glass p-4">
+      <p class="font-black mb-2">🔥 التقدم</p>
+      <div class="w-full h-3 bg-slate-800 rounded">
+        <div id="xp-bar" class="xp-fill h-full"></div>
+      </div>
     </div>
 
-    <div id="global-workspace"></div>
-
-    <div id="launcher" class="grid">
-        <!-- يتم ملؤه بواسطة JavaScript -->
+    <div class="glass p-4">
+      <p class="font-black mb-2">🏆 التحدي اليومي</p>
+      <p id="daily-challenge" class="text-sm"></p>
     </div>
+  </section>
 
-    <div class="dock-wrapper">
-        <div class="dock" id="main-dock">
-            <div class="dock-item bg-white/10" onclick="toggleLauncher()"><i class="fas fa-shapes text-blue-400"></i></div>
-            <div class="w-[1px] h-8 bg-white/10 mx-1"></div>
-            <div class="dock-item bg-blue-600 shadow-lg shadow-blue-900/40" id="dock-google" onclick="launch('google')"><i class="fab fa-google"></i></div>
-            <div class="dock-item bg-indigo-600 shadow-lg shadow-indigo-900/40" id="dock-code" onclick="launch('code')"><i class="fas fa-terminal"></i></div>
-            <div class="dock-item bg-pink-600 shadow-lg shadow-pink-900/40" id="dock-chat" onclick="launch('chat')"><i class="fas fa-comments"></i></div>
-            <div class="dock-item bg-emerald-600 shadow-lg shadow-emerald-900/40" id="dock-games" onclick="launch('games')"><i class="fas fa-gamepad"></i></div>
-        </div>
+  <!-- STUDY -->
+  <section id="study" class="tab space-y-4">
+    <h2 class="font-black">📚 المواد</h2>
+    <div id="subjects-container" class="space-y-3"></div>
+  </section>
+
+  <!-- FOCUS -->
+  <section id="focus" class="tab space-y-4 text-center">
+    <div class="glass p-6">
+      <div id="timer" class="text-6xl font-black">50:00</div>
+      <button onclick="toggleTimer()" class="btn-main mt-4">ابدأ التركيز</button>
     </div>
+  </section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
-        import { getDatabase, ref, set, update, onValue, onChildAdded, onChildRemoved, onChildChanged, push } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+  <!-- STORE -->
+  <section id="store" class="tab space-y-4">
+    <h2 class="font-black">🛒 المتجر</h2>
+    <div class="glass p-4">💡 عنصر مضاعفة XP</div>
+    <div class="glass p-4">🔥 عنصر زيادة التركيز</div>
+  </section>
 
-        // استخدام نفس الإعدادات الأصلية
-        const firebaseConfig = {
-            apiKey: "AIzaSyAsExo8GR-YjB7FgpX3yDzVCiv3UADyDpQ",
-            authDomain: "coffee-spark-ai-barista-370d0.firebaseapp.com",
-            databaseURL: "https://coffee-spark-ai-barista-370d0-default-rtdb.firebaseio.com",
-            projectId: "coffee-spark-ai-barista-370d0",
-            storageBucket: "coffee-spark-ai-barista-370d0.firebasestorage.app",
-            messagingSenderId: "533681293642",
-            appId: "1:533681293642:web:fc1901fe139ff6156859b3"
-        };
+</main>
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const winRef = ref(db, 'infinity_pro_v4/windows');
-        const chatRef = ref(db, 'infinity_pro_v4/chat');
-        const workspace = document.getElementById('global-workspace');
-        
-        let zIndexTop = 1000;
-        let activeOffset = 0;
-        let currentDevice = 0;
-
-        const appLibrary = {
-            google: { name: 'البحث الذكي', icon: 'fa-google', url: 'https://www.google.com/search?igu=1', color: 'bg-blue-600' },
-            chat: { name: 'المحادثة العالمية', icon: 'fa-comments', type: 'chat', color: 'bg-pink-600' },
-            code: { name: 'المحرر البرمجي', icon: 'fa-terminal', type: 'editor', color: 'bg-indigo-600' },
-            youtube: { name: 'يوتيوب برو', icon: 'fa-youtube', url: 'https://www.youtube.com/embed/jfKfPfyJRdk', color: 'bg-red-600' },
-            chatgpt: { name: 'ChatGPT', icon: 'fa-robot', url: 'https://duckduckgo.com/?q=ChatGPT&ia=chat', color: 'bg-emerald-700' },
-            spotify: { name: 'الموسيقى', icon: 'fa-spotify', url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM3M', color: 'bg-green-600' },
-            maps: { name: 'الخرائط', icon: 'fa-map-location-dot', url: 'https://www.google.com/maps/embed', color: 'bg-orange-600' },
-            games: { name: 'ألعاب سريعة', icon: 'fa-gamepad', url: 'https://play2048.co', color: 'bg-amber-600' },
-            paint: { name: 'الرسم الرقمي', icon: 'fa-palette', url: 'https://kleki.com', color: 'bg-purple-600' },
-            calc: { name: 'الحاسبة', icon: 'fa-calculator', url: 'https://www.desmos.com/scientific', color: 'bg-slate-700' },
-            weather: { name: 'الطقس', icon: 'fa-cloud-sun', url: 'https://www.weather.com', color: 'bg-sky-500' },
-            settings: { name: 'الإعدادات', icon: 'fa-cog', type: 'settings', color: 'bg-gray-700' }
-        };
-
-        // نظام الإشعارات
-        window.notify = (msg, icon = 'fa-info-circle') => {
-            const container = document.getElementById('notifications');
-            const n = document.createElement('div');
-            n.className = 'notif';
-            n.innerHTML = `<i class="fas ${icon} ml-2 text-blue-400"></i> ${msg}`;
-            container.appendChild(n);
-            setTimeout(() => n.classList.add('show'), 100);
-            setTimeout(() => {
-                n.classList.remove('show');
-                setTimeout(() => n.remove(), 500);
-            }, 4000);
-        };
-
-        // بناء الـ Launcher
-        const launcher = document.getElementById('launcher');
-        Object.keys(appLibrary).forEach(key => {
-            const item = document.createElement('div');
-            item.className = 'launcher-item';
-            item.onclick = () => { launch(key); toggleLauncher(); };
-            item.innerHTML = `
-                <div class="w-14 h-14 ${appLibrary[key].color} rounded-2xl flex items-center justify-center mb-2 shadow-xl">
-                    <i class="${appLibrary[key].icon.startsWith('fa-') ? 'fas ' + appLibrary[key].icon : 'fab ' + appLibrary[key].icon} text-2xl text-white"></i>
-                </div>
-                <span class="text-[10px] font-bold text-center text-white/90">${appLibrary[key].name}</span>
-            `;
-            launcher.appendChild(item);
-        });
-
-        window.toggleLauncher = () => {
-            const isVisible = launcher.style.display === 'grid';
-            launcher.style.display = isVisible ? 'none' : 'grid';
-            if(!isVisible) launcher.style.animation = 'fadeInUp 0.3s ease-out';
-        };
-
-        window.launch = (key) => {
-            const id = 'win_' + key + '_' + Date.now(); 
-            const data = appLibrary[key];
-            const spawnX = Math.abs(activeOffset) + 100 + (Math.random() * 50);
-            
-            set(ref(db, `infinity_pro_v4/windows/${id}`), {
-                id, title: data.name, icon: data.icon, 
-                url: data.url || '', type: data.type || 'web',
-                x: spawnX, y: 80, w: 800, h: 500, z: zIndexTop++,
-                state: 'normal', owner: currentDevice
-            });
-            notify(`تم تشغيل ${data.name}`, data.icon);
-        };
-
-        onChildAdded(winRef, (snap) => createWin(snap.val()));
-        onChildRemoved(winRef, (snap) => {
-            document.getElementById(snap.key)?.remove();
-            const baseKey = snap.key.split('_')[1];
-            document.getElementById(`dock-${baseKey}`)?.classList.remove('running');
-        });
-        onChildChanged(winRef, (snap) => updateWinUI(snap.val()));
-
-        function createWin(data) {
-            if (document.getElementById(data.id)) return;
-            const win = document.createElement('div');
-            win.id = data.id;
-            win.className = 'window';
-            
-            let content = '';
-            if (data.type === 'editor') {
-                content = `
-                <div class="flex flex-col h-full bg-[#0a0f1d]">
-                    <div class="flex gap-2 p-2 bg-white/5 border-b border-white/10">
-                        <button class="px-3 py-1 bg-blue-600 rounded text-[10px]" onclick="notify('تم حفظ المسودة')">SAVE</button>
-                        <button class="px-3 py-1 bg-white/10 rounded text-[10px]" onclick="this.parentElement.nextElementSibling.value=''">CLEAR</button>
-                    </div>
-                    <textarea class="w-full flex-1 p-6 bg-transparent text-emerald-400 font-mono text-sm border-none outline-none resize-none" placeholder="// اكتب الكود هنا..."></textarea>
-                </div>`;
-            } else if (data.type === 'chat') {
-                content = `
-                <div class="chat-container">
-                    <div id="chat-messages"></div>
-                    <div class="p-3 bg-white/5 border-t border-white/10 flex gap-2">
-                        <input type="text" id="chat-input-${data.id}" class="flex-1 bg-white/10 border-none rounded-lg px-4 text-sm outline-none" placeholder="اكتب رسالة...">
-                        <button onclick="sendMsg('${data.id}')" class="w-10 h-10 bg-blue-600 rounded-lg"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>`;
-            } else {
-                content = `<iframe src="${data.url}" loading="lazy"></iframe>`;
-            }
-
-            win.innerHTML = `
-                <div class="win-header" id="hd-${data.id}">
-                    <div class="flex items-center gap-3">
-                        <i class="${data.icon.startsWith('fa-') ? 'fas ' + data.icon : 'fab ' + data.icon} text-blue-400 text-sm"></i>
-                        <span class="text-[11px] font-bold text-white/90 tracking-wide">${data.title}</span>
-                    </div>
-                    <div class="flex gap-2.5">
-                        <div class="btn-circle bg-yellow-500/80 border border-yellow-400/30" onclick="minWin('${data.id}')"></div>
-                        <div class="btn-circle bg-green-500/80 border border-green-400/30" onclick="maxWin('${data.id}')"></div>
-                        <div class="btn-circle bg-red-500/80 border border-red-400/30" onclick="closeWin('${data.id}')"></div>
-                    </div>
-                </div>
-                <div class="win-body">${content}</div>
-                <div class="resizer" id="rz-${data.id}"></div>
-            `;
-
-            workspace.appendChild(win);
-            const baseKey = data.id.split('_')[1];
-            document.getElementById(`dock-${baseKey}`)?.classList.add('running');
-            bindWinEvents(data.id);
-            updateWinUI(data);
-
-            if(data.type === 'chat') initChatUI(data.id);
-        }
-
-        function updateWinUI(data) {
-            const win = document.getElementById(data.id);
-            if(!win) return;
-            
-            win.style.zIndex = data.z;
-            if(data.state === 'minimized') {
-                win.classList.add('minimized');
-            } else if(data.state === 'maximized') {
-                win.classList.remove('minimized');
-                win.style.left = Math.abs(activeOffset) + 'px';
-                win.style.top = '38px';
-                win.style.width = '100vw';
-                win.style.height = 'calc(100vh - 38px)';
-                win.style.borderRadius = '0px';
-            } else {
-                win.classList.remove('minimized');
-                win.style.borderRadius = '16px';
-                win.style.left = data.x + 'px';
-                win.style.top = data.y + 'px';
-                win.style.width = data.w + 'px';
-                win.style.height = data.h + 'px';
-            }
-        }
-
-        function bindWinEvents(id) {
-            const win = document.getElementById(id);
-            const header = document.getElementById(`hd-${id}`);
-            const resizer = document.getElementById(`rz-${id}`);
-
-            header.onmousedown = (e) => {
-                if(e.target.classList.contains('btn-circle')) return;
-                const dx = e.clientX - win.offsetLeft;
-                const dy = e.clientY - win.offsetTop;
-                win.classList.add('active');
-                update(ref(db, `infinity_pro_v4/windows/${id}`), { z: zIndexTop++, state: 'normal' });
-
-                const move = (me) => {
-                    const nx = me.clientX - dx;
-                    const ny = me.clientY - dy;
-                    win.style.left = nx + 'px';
-                    win.style.top = ny + 'px';
-                    update(ref(db, `infinity_pro_v4/windows/${id}`), { x: nx, y: ny });
-                };
-                document.addEventListener('mousemove', move);
-                document.addEventListener('mouseup', () => {
-                    document.removeEventListener('mousemove', move);
-                    win.classList.remove('active');
-                }, {once:true});
-            };
-
-            resizer.onmousedown = (e) => {
-                e.preventDefault();
-                const resize = (me) => {
-                    const nw = Math.max(400, me.clientX - win.offsetLeft);
-                    const nh = Math.max(300, me.clientY - win.offsetTop);
-                    win.style.width = nw + 'px';
-                    win.style.height = nh + 'px';
-                    update(ref(db, `infinity_pro_v4/windows/${id}`), { w: nw, h: nh });
-                };
-                document.addEventListener('mousemove', resize);
-                document.addEventListener('mouseup', () => document.removeEventListener('mousemove', resize), {once:true});
-            };
-        }
-
-        // نظام المحادثة
-        window.sendMsg = (winId) => {
-            const input = document.getElementById(`chat-input-${winId}`);
-            if(!input.value.trim()) return;
-            push(chatRef, {
-                text: input.value,
-                sender: currentDevice === 0 ? 'NODE A' : 'NODE B',
-                time: Date.now()
-            });
-            input.value = '';
-        };
-
-        function initChatUI(winId) {
-            onValue(chatRef, (snap) => {
-                const box = document.querySelector(`#${winId} #chat-messages`);
-                if(!box) return;
-                box.innerHTML = '';
-                snap.forEach(child => {
-                    const m = child.val();
-                    const isMe = (m.sender === 'NODE A' && currentDevice === 0) || (m.sender === 'NODE B' && currentDevice === 1);
-                    const div = document.createElement('div');
-                    div.className = `msg ${isMe ? 'sent' : 'received'}`;
-                    div.innerHTML = `<div class="text-[9px] opacity-50 mb-1">${m.sender}</div>${m.text}`;
-                    box.appendChild(div);
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        window.closeWin = (id) => {
-            set(ref(db, `infinity_pro_v4/windows/${id}`), null);
-            notify("تم إغلاق النافذة");
-        };
-        window.minWin = (id) => update(ref(db, `infinity_pro_v4/windows/${id}`), { state: 'minimized' });
-        window.maxWin = (id) => {
-            const win = document.getElementById(id);
-            const isMax = win.style.width === '100vw';
-            update(ref(db, `infinity_pro_v4/windows/${id}`), { state: isMax ? 'normal' : 'maximized' });
-        };
-
-        window.switchDevice = (idx) => {
-            currentDevice = idx;
-            activeOffset = idx * -100;
-            workspace.style.transform = `translateX(${activeOffset}vw)`;
-            document.getElementById('d0').style.opacity = idx === 0 ? '1' : '0.4';
-            document.getElementById('d0').style.fontWeight = idx === 0 ? 'bold' : 'normal';
-            document.getElementById('d1').style.opacity = idx === 1 ? '1' : '0.4';
-            document.getElementById('d1').style.fontWeight = idx === 1 ? 'bold' : 'normal';
-            notify(`انتقلت إلى ${idx === 0 ? 'NODE A' : 'NODE B'}`);
-        };
-
-        // تحديث الساعة بدقة
-        setInterval(() => {
-            const d = new Date();
-            document.getElementById('clock').innerText = 
-                d.getHours().toString().padStart(2, '0') + ":" + 
-                d.getMinutes().toString().padStart(2, '0') + ":" + 
-                d.getSeconds().toString().padStart(2, '0');
-        }, 1000);
-
-        // الترحيب
-        window.onload = () => notify("مرحباً بك في Infinity OS Ultimate", "fa-bolt");
-
-        // دعم اللمس المتقدم
-        document.addEventListener('touchstart', (e) => {
-            const h = e.target.closest('.win-header');
-            if(h) {
-                const w = h.parentElement;
-                const t = e.touches[0];
-                const dx = t.clientX - w.offsetLeft;
-                const dy = t.clientY - w.offsetTop;
-                const tm = (te) => {
-                    const mt = te.touches[0];
-                    const nx = mt.clientX - dx;
-                    const ny = mt.clientY - dy;
-                    w.style.left = nx + 'px';
-                    w.style.top = ny + 'px';
-                    update(ref(db, `infinity_pro_v4/windows/${w.id}`), { x: nx, y: ny, state: 'normal' });
-                };
-                document.addEventListener('touchmove', tm);
-                document.addEventListener('touchend', () => document.removeEventListener('touchmove', tm), {once:true});
-            }
-        }, {passive: true});
-
-    </script>
+<script src="script.js"></script>
 </body>
 </html>

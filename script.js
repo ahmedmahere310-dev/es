@@ -1,291 +1,210 @@
-/* =====================================================
-   🏗️ BUNYAN – FULL JAVASCRIPT CORE (65 FEATURES)
-   ===================================================== */
 
-/* ======================
-   STATE
-====================== */
-let state = JSON.parse(localStorage.getItem("bunyan")) || {
-  level: 1,
-  xp: 0,
-  totalXp: 0,
-  title: "مبتدئ",
+import { GoogleGenAI } from "https://esm.sh/@google/genai@^1.39.0";
 
-  subjects: [
-    { id: "arabic", name: "اللغة العربية", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/arabic" },
-    { id: "english", name: "اللغة الإنجليزية", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/english" },
-    { id: "math", name: "الرياضيات", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/mathematics" },
-    { id: "physics", name: "الفيزياء", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/physics" },
-    { id: "chemistry", name: "الكيمياء", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/chemistry" },
-    { id: "history", name: "التاريخ", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/history" },
-    { id: "geography", name: "الجغرافيا", progress: 0, link: "https://abwaab.com/eg/ar/grade-11/geography" }
-  ],
+// --- State ---
+let tasks = JSON.parse(localStorage.getItem('taskflow_v3')) || [];
+let timeLeft = 25 * 60;
+let timerId = null;
+let isTimerRunning = false;
 
-  timer: {
-    seconds: 50 * 60,
-    running: false,
-    interval: null
-  },
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  /* ===== EXTENDED SYSTEM (65 FEATURES) ===== */
-  ext: {
-    streak: 0,
-    bestStreak: 0,
-    lastActiveDay: null,
+// --- DOM Elements ---
+const taskList = document.getElementById('taskList');
+const totalPointsEl = document.getElementById('totalPoints');
+const timerDisplay = document.getElementById('timerDisplay');
+const btnTimer = document.getElementById('btnTimer');
+const aiInput = document.getElementById('aiInput');
+const btnExtract = document.getElementById('btnExtract');
+const focusWidget = document.getElementById('focusWidget');
+const widgetTitle = document.getElementById('widgetTaskTitle');
+const toast = document.getElementById('toast');
 
-    energy: 100,
-    coins: 0,
-    gems: 0,
+// --- Initialization ---
+function init() {
+    render();
+    setupEventListeners();
+}
 
-    dailyXP: 0,
-    weeklyXP: 0,
-    sessionsToday: 0,
-    focusMinutes: 0,
+function setupEventListeners() {
+    btnTimer.onclick = toggleTimer;
+    btnExtract.onclick = handleAIExtraction;
+    document.getElementById('btnCommunity').onclick = () => document.getElementById('communityPanel').classList.remove('hidden');
+    document.getElementById('btnCloseCommunity').onclick = () => document.getElementById('communityPanel').classList.add('hidden');
+    document.getElementById('btnWidgetComplete').onclick = () => {
+        const topTask = getTopTask();
+        if (topTask) toggleTask(topTask.id);
+    };
+    document.getElementById('btnWidgetJump').onclick = () => {
+        const topTask = getTopTask();
+        if (topTask) jumpToTask(topTask.id);
+    };
+}
 
-    heatmap: {},
-
-    challenges: {
-      daily: null,
-      weekly: null
-    },
-
-    achievements: [],
-    rivals: [],
-    leaderboardRank: 0,
-
-    mode: "normal", // normal | hardcore | chill | recovery
-    penalties: 0,
-    insurance: false
-  }
-};
-
-/* ======================
-   SAVE / LOAD
-====================== */
+// --- Logic ---
 function save() {
-  localStorage.setItem("bunyan", JSON.stringify(state));
-  updateUI();
+    localStorage.setItem('taskflow_v3', JSON.stringify(tasks));
+    render();
 }
 
-/* ======================
-   XP + LEVEL SYSTEM
-====================== */
-function addXP(amount) {
-  amount = Math.floor(amount);
-  state.xp += amount;
-  state.totalXp += amount;
-  state.ext.dailyXP += amount;
-  state.ext.weeklyXP += amount;
-
-  if (state.xp >= state.level * 1000) {
-    state.xp -= state.level * 1000;
-    state.level++;
-    notify("🎉 ليفل جديد!");
-  }
-
-  updateTitle();
-  updateStreak();
-  economyFromXP(amount);
-  updateLeaderboard();
-
-  save();
+function getTopTask() {
+    return tasks.filter(t => !t.completed).sort((a, b) => {
+        const p = { high: 2, medium: 1, low: 0 };
+        return p[b.priority] - p[a.priority];
+    })[0];
 }
 
-function updateTitle() {
-  const l = state.level;
-  if (l < 5) state.title = "مبتدئ";
-  else if (l < 10) state.title = "مقاتل علم";
-  else if (l < 20) state.title = "محارب التفوق";
-  else if (l < 35) state.title = "وحش المذاكرة";
-  else state.title = "أسطورة الثانوية";
+function toggleTask(id) {
+    tasks = tasks.map(t => {
+        if (t.id === id) {
+            const newState = !t.completed;
+            if (newState) showToast("رائع! المهمة أنجزت. أضفها للمجتمع لكسب نقاط ✨");
+            return { ...t, completed: newState };
+        }
+        return t;
+    });
+    save();
 }
 
-/* ======================
-   STREAK SYSTEM
-====================== */
-function updateStreak() {
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-
-  if (state.ext.lastActiveDay !== today) {
-    state.ext.streak =
-      state.ext.lastActiveDay === yesterday ? state.ext.streak + 1 : 1;
-
-    state.ext.bestStreak = Math.max(state.ext.bestStreak, state.ext.streak);
-    state.ext.lastActiveDay = today;
-  }
+function deleteTask(id) {
+    tasks = tasks.filter(t => t.id !== id);
+    save();
 }
 
-/* ======================
-   ECONOMY
-====================== */
-function economyFromXP(xp) {
-  state.ext.coins += Math.floor(xp / 40);
-  if (xp >= 400) state.ext.gems += 1;
+function publishTask(id) {
+    tasks = tasks.map(t => {
+        if (t.id === id) {
+            const points = t.priority === 'high' ? 50 : 20;
+            showToast(`تم النشر! +${points} نقطة تأثير 🚀`);
+            return { ...t, isPublished: true, impactPoints: points };
+        }
+        return t;
+    });
+    save();
 }
 
-/* ======================
-   SUBJECTS
-====================== */
-function upgradeSubject(id) {
-  const s = state.subjects.find(x => x.id === id);
-  if (!s || s.progress >= 100) return;
+async function handleAIExtraction() {
+    const text = aiInput.value.trim();
+    if (!text) return;
 
-  s.progress += 5;
-  addXP(50);
-}
+    btnExtract.disabled = true;
+    btnExtract.innerText = "جاري التحليل...";
 
-/* ======================
-   TIMER (POMODORO)
-====================== */
-function toggleTimer() {
-  if (state.timer.running) {
-    clearInterval(state.timer.interval);
-    state.timer.running = false;
-    return;
-  }
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: `حول هذا النص لمهام بصيغة JSON: "${text}". لكل مهمة حدد: title, priority (high, medium, low).`,
+            config: {
+                responseMimeType: "application/json"
+            }
+        });
 
-  state.timer.running = true;
-  state.timer.interval = setInterval(() => {
-    state.timer.seconds--;
-    logFocusMinute();
+        const newItems = JSON.parse(response.text || "[]");
+        newItems.forEach(item => {
+            tasks.unshift({
+                id: Date.now() + Math.random(),
+                title: item.title,
+                priority: item.priority || 'medium',
+                completed: false,
+                createdAt: Date.now()
+            });
+        });
 
-    if (state.timer.seconds <= 0) {
-      clearInterval(state.timer.interval);
-      state.timer.running = false;
-      state.timer.seconds = 50 * 60;
-      state.ext.sessionsToday++;
-      addXP(500);
-      notify("🔥 جلسة تركيز مكتملة!");
+        aiInput.value = "";
+        showToast("تمت إضافة المهام بنجاح 🧠");
+    } catch (e) {
+        showToast("حدث خطأ في الاتصال بالذكاء الاصطناعي");
+    } finally {
+        btnExtract.disabled = false;
+        btnExtract.innerText = "حلل وأضف";
+        save();
     }
-
-    renderTimer();
-  }, 1000);
 }
 
-function renderTimer() {
-  const m = Math.floor(state.timer.seconds / 60);
-  const s = state.timer.seconds % 60;
-  const el = document.getElementById("timer");
-  if (el) el.innerText = `${m}:${s.toString().padStart(2, "0")}`;
+function toggleTimer() {
+    if (isTimerRunning) {
+        clearInterval(timerId);
+        btnTimer.innerText = "استكمال";
+    } else {
+        timerId = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            if (timeLeft <= 0) {
+                clearInterval(timerId);
+                showToast("انتهى وقت التركيز! ☕");
+                timeLeft = 25 * 60;
+            }
+        }, 1000);
+        btnTimer.innerText = "إيقاف مؤقت";
+    }
+    isTimerRunning = !isTimerRunning;
 }
 
-/* ======================
-   FOCUS HEATMAP
-====================== */
-function logFocusMinute() {
-  const h = new Date().getHours();
-  state.ext.heatmap[h] = (state.ext.heatmap[h] || 0) + 1;
-  state.ext.focusMinutes++;
+function updateTimerDisplay() {
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    timerDisplay.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-/* ======================
-   CHALLENGES
-====================== */
-function generateChallenges() {
-  const daily = [
-    { text: "ذاكر جلستين", xp: 300 },
-    { text: "كمّل مادة", xp: 400 },
-    { text: "50 دقيقة تركيز", xp: 500 }
-  ];
-
-  state.ext.challenges.daily =
-    daily[Math.floor(Math.random() * daily.length)];
-
-  state.ext.challenges.weekly = {
-    text: "5 ساعات مذاكرة",
-    xp: 1500
-  };
+function jumpToTask(id) {
+    const el = document.getElementById(`task-${id}`);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-4', 'ring-indigo-400');
+        setTimeout(() => el.classList.remove('ring-4', 'ring-indigo-400'), 2000);
+    }
 }
 
-/* ======================
-   RIVALS & LEADERBOARD
-====================== */
-function generateRivals() {
-  state.ext.rivals = Array.from({ length: 30 }, (_, i) => ({
-    name: "طالب " + (i + 1),
-    xp: Math.floor(Math.random() * 10000)
-  }));
+function showToast(msg) {
+    const content = toast.querySelector('div');
+    content.innerText = msg;
+    toast.classList.remove('hidden');
+    toast.classList.add('animate-toast');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
 }
 
-function updateLeaderboard() {
-  const all = [...state.ext.rivals, { name: "أنت", xp: state.totalXp }];
-  all.sort((a, b) => b.xp - a.xp);
-  state.ext.leaderboardRank =
-    all.findIndex(x => x.name === "أنت") + 1;
+// --- Rendering ---
+function render() {
+    // Total Points
+    const pts = tasks.reduce((acc, t) => acc + (t.impactPoints || 0), 0);
+    totalPointsEl.innerText = `${pts} نقطة`;
+
+    // Tasks
+    taskList.innerHTML = '';
+    tasks.forEach(t => {
+        const item = document.createElement('div');
+        item.id = `task-${t.id}`;
+        item.className = `p-4 bg-white border rounded-2xl flex items-center justify-between group transition-all ${t.completed ? 'task-completed' : ''}`;
+        item.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden">
+                <input type="checkbox" ${t.completed ? 'checked' : ''} class="w-5 h-5 rounded-full border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                <div>
+                    <div class="font-bold text-sm truncate">${t.title}</div>
+                    <span class="text-[9px] px-2 py-0.5 rounded uppercase font-black priority-${t.priority}">${t.priority}</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                ${t.completed && !t.isPublished ? `<button class="publish-btn text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-lg">نشر 🚀</button>` : ''}
+                <button class="delete-btn text-slate-300 hover:text-red-500">✕</button>
+            </div>
+        `;
+
+        item.querySelector('input').onclick = () => toggleTask(t.id);
+        item.querySelector('.delete-btn').onclick = () => deleteTask(t.id);
+        const pub = item.querySelector('.publish-btn');
+        if (pub) pub.onclick = () => publishTask(t.id);
+
+        taskList.appendChild(item);
+    });
+
+    // Widget Logic
+    const topTask = getTopTask();
+    if (topTask) {
+        focusWidget.classList.remove('hidden');
+        widgetTitle.innerText = topTask.title;
+    } else {
+        focusWidget.classList.add('hidden');
+    }
 }
 
-/* ======================
-   MODES
-====================== */
-function setMode(mode) {
-  state.ext.mode = mode;
-  notify("⚙️ تم تغيير الوضع: " + mode);
-}
-
-/* ======================
-   UI RENDER
-====================== */
-function updateUI() {
-  const lvl = document.getElementById("lvl-num");
-  const xpT = document.getElementById("ui-total-xp");
-  const title = document.getElementById("user-title");
-  const bar = document.getElementById("xp-bar");
-
-  if (lvl) lvl.innerText = state.level;
-  if (xpT) xpT.innerText = state.totalXp;
-  if (title) title.innerText = state.title;
-  if (bar)
-    bar.style.width =
-      (state.xp / (state.level * 1000)) * 100 + "%";
-
-  renderSubjects();
-}
-
-function renderSubjects() {
-  const c = document.getElementById("subjects-container");
-  if (!c) return;
-
-  c.innerHTML = state.subjects.map(s => `
-    <div class="glass p-4 flex justify-between items-center">
-      <div>
-        <b>${s.name}</b>
-        <div class="h-2 bg-slate-800 mt-2">
-          <div class="h-full bg-emerald-400" style="width:${s.progress}%"></div>
-        </div>
-      </div>
-      <div class="flex gap-2">
-        <a href="${s.link}" target="_blank" class="btn-main text-xs">ابدأ</a>
-        <button onclick="upgradeSubject('${s.id}')" class="btn-main text-xs">+</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-/* ======================
-   NAV
-====================== */
-function switchTab(id) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.getElementById(id)?.classList.add("active");
-}
-
-/* ======================
-   NOTIFY
-====================== */
-function notify(msg) {
-  const n = document.createElement("div");
-  n.className =
-    "fixed top-24 left-1/2 -translate-x-1/2 bg-emerald-400 text-black px-6 py-3 rounded-xl font-black z-50";
-  n.innerText = msg;
-  document.body.appendChild(n);
-  setTimeout(() => n.remove(), 2500);
-}
-
-/* ======================
-   INIT
-====================== */
-generateRivals();
-generateChallenges();
-updateUI();
-renderTimer();
+init();

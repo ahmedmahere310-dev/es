@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskflow AI - المساعد الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-900 font-['IBM_Plex_Sans_Arabic']">
+
+    <!-- Header -->
+    <header class="bg-white border-b sticky top-0 z-40 shadow-sm px-4 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">T</div>
+            <h1 class="font-bold text-lg">تاسك فلو <span class="text-indigo-600">AI</span></h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="text-left hidden sm:block">
+                <div class="text-[10px] uppercase font-black text-slate-400">التأثير العالمي</div>
+                <div id="totalPoints" class="text-sm font-bold text-indigo-600">0 نقطة</div>
+            </div>
+            <button id="btnCommunity" class="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Sidebar -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-white p-8 rounded-3xl border border-indigo-100 shadow-xl text-center">
+                <div id="timerDisplay" class="text-5xl font-black mb-8 tabular-nums">25:00</div>
+                <button id="btnTimer" class="w-full py-4 rounded-2xl font-black text-sm uppercase bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all">ابدأ التركيز</button>
+            </div>
+            
+            <div class="bg-white p-6 rounded-3xl border shadow-sm">
+                <h2 class="font-bold mb-4">إضافة سريعة بالذكاء الاصطناعي</h2>
+                <textarea id="aiInput" placeholder="مثال: تمرين رياضي لمدة ساعة، مراجعة ايميلات الشغل (عاجل)..." class="w-full h-24 p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none mb-3"></textarea>
+                <button id="btnExtract" class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 disabled:opacity-50">حلل وأضف</button>
+            </div>
+        </div>
+
+        <!-- Task List -->
+        <div class="lg:col-span-8 space-y-4">
+            <div id="aiPlanContainer" class="hidden animate-toast"></div>
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest">قائمة المهام</h2>
+                <select id="sortTasks" class="bg-transparent text-xs font-bold text-indigo-600 outline-none">
+                    <option value="status">الأحدث</option>
+                    <option value="priority">الأولوية</option>
+                </select>
+            </div>
+            <div id="taskList" class="space-y-3">
+                <!-- المهام ستظهر هنا -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Widget (الويدجت العائم) -->
+    <div id="focusWidget" class="fixed bottom-6 left-6 z-50 hidden transition-all duration-500">
+        <div class="bg-white border border-indigo-100 p-5 rounded-[2rem] shadow-2xl w-72 ring-8 ring-indigo-50/50">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">التركيز الحالي</span>
+                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
+            </div>
+            <h3 id="widgetTaskTitle" class="font-bold text-slate-800 text-sm mb-4 line-clamp-2">لا توجد مهام حالياً</h3>
+            <div class="flex gap-2">
+                <button id="btnWidgetComplete" class="flex-1 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-bold uppercase hover:bg-indigo-700 transition-colors">إنجاز سريع ✅</button>
+                <button id="btnWidgetJump" class="w-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-600">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Sidebar -->
+    <div id="communityPanel" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex justify-end">
+        <div class="w-full max-w-sm bg-white h-full shadow-2xl animate-slide flex flex-col">
+            <div class="p-6 bg-indigo-600 text-white flex justify-between items-center">
+                <h2 class="text-xl font-bold">المجتمع العالمي</h2>
+                <button id="btnCloseCommunity" class="p-2 hover:bg-white/10 rounded-full">✕</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-6" id="communityContent">
+                <div class="bg-indigo-50 p-6 rounded-3xl text-center border border-indigo-100">
+                    <div class="text-xs font-bold text-indigo-400 uppercase mb-1">ترتيبك اليومي</div>
+                    <div class="text-4xl font-black text-indigo-600">#1,402</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden pointer-events-none">
+        <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-bold"></div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

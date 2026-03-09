@@ -6,20 +6,25 @@
     <title>Coffee Spark - طلب العميل</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- استيراد مكتبات فايربيس بطريقة التوافق المباشر مع المتصفح -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
         body { font-family: 'Tajawal', sans-serif; background-color: #fdfaf7; color: #3c2a21; }
         .premium-shadow { box-shadow: 0 20px 50px rgba(60, 42, 33, 0.05); }
         .menu-item { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .menu-item.selected { transform: scale(0.95); border-color: #d4a373; background-color: #fff9f0; }
+        .menu-item.selected { transform: scale(0.95); border-color: #d4a373; background-color: #fff9f0; border-width: 2px; }
         .progress-bar { transition: width 1s ease-in-out; }
-        .chat-msg { max-width: 85%; animation: slideUp 0.3s ease-out; }
+        .chat-msg { max-width: 85%; animation: slideUp 0.3s ease-out; margin-bottom: 8px; }
         @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body class="min-h-screen pb-10">
 
-    <!-- Header -->
     <div class="bg-[#3c2a21] text-white px-6 py-10 rounded-b-[3.5rem] mb-8 shadow-2xl relative overflow-hidden">
         <div class="relative z-10">
             <h1 class="text-3xl font-900 tracking-tighter">COFFEE SPARK</h1>
@@ -31,8 +36,6 @@
     </div>
 
     <main class="max-w-md mx-auto px-5">
-        
-        <!-- Order Phase: Entry -->
         <div id="phase-order" class="space-y-6">
             <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100">
                 <label class="text-[10px] font-bold text-stone-400 block mb-2 px-2 uppercase tracking-widest">رقم الطاولة</label>
@@ -41,13 +44,11 @@
             </div>
 
             <div class="flex items-center justify-between px-2">
-                <h3 class="font-900 text-lg">المنيو المفضل</h3>
+                <h3 class="font-900 text-lg text-stone-800">المنيو المفضل</h3>
                 <span class="text-[10px] bg-stone-100 px-3 py-1 rounded-full text-stone-500">طازج يومياً</span>
             </div>
 
-            <div class="grid grid-cols-2 gap-4" id="menu-grid">
-                <!-- Items generated via JS -->
-            </div>
+            <div class="grid grid-cols-2 gap-4" id="menu-grid"></div>
 
             <button id="submit-order" disabled class="w-full bg-stone-200 text-stone-400 py-5 rounded-[2rem] font-black text-lg transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3">
                 إرسال الطلب
@@ -55,46 +56,37 @@
             </button>
         </div>
 
-        <!-- Tracking Phase -->
         <div id="phase-tracking" class="hidden space-y-6">
             <div class="bg-white rounded-[2.5rem] p-8 premium-shadow text-center">
                 <div class="text-xs text-stone-400 mb-6 font-bold uppercase">حالة الطلب المباشرة</div>
-                
                 <div class="relative py-4">
                     <div class="flex justify-between mb-8 relative z-10">
-                        <div id="step-received" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                        <div id="step-received" class="flex flex-col items-center gap-2 opacity-20">
                             <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-receipt"></i></div>
                             <span class="text-[10px] font-bold">استلام</span>
                         </div>
-                        <div id="step-preparing" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                        <div id="step-preparing" class="flex flex-col items-center gap-2 opacity-20">
                             <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-fire-burner"></i></div>
                             <span class="text-[10px] font-bold">تحضير</span>
                         </div>
-                        <div id="step-delivering" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                        <div id="step-delivering" class="flex flex-col items-center gap-2 opacity-20">
                             <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-moped"></i></div>
                             <span class="text-[10px] font-bold">توصيل</span>
                         </div>
                     </div>
-                    <!-- Connector line -->
                     <div class="absolute top-10 left-0 w-full h-1 bg-stone-100 -z-0 rounded-full">
                         <div id="progress-line" class="h-full bg-[#d4a373] progress-bar w-0 rounded-full"></div>
                     </div>
                 </div>
-                
                 <p id="status-text" class="text-sm font-bold text-[#d4a373] mt-4 animate-pulse">جاري تأكيد طلبك...</p>
             </div>
 
-            <!-- Chat Container -->
             <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100 flex flex-col h-[350px]">
                 <div class="flex items-center justify-between mb-4 border-b pb-4">
                     <h4 class="font-900 text-sm">دردشة الطاولة</h4>
                     <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
                 </div>
-                
-                <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 px-2 mb-4 scroll-smooth">
-                    <!-- Messages -->
-                </div>
-
+                <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 px-2 mb-4 flex flex-col"></div>
                 <div class="flex gap-2">
                     <input type="text" id="chat-input" placeholder="اكتب استفسارك..." 
                         class="flex-1 bg-stone-50 border-none rounded-2xl px-5 py-3 text-xs outline-none focus:ring-1 focus:ring-[#d4a373]">
@@ -106,16 +98,15 @@
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
+        // إعدادات فايربيس
         const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'spark-v5';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        
+        // بدء التشغيل
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
         let currentUser = null;
         let selectedItems = [];
@@ -126,35 +117,22 @@
             { name: 'فرابيه كراميل', icon: '🥤', price: 75 }
         ];
 
-        // Ensure Auth before any Firestore calls (Rule 3)
-        const initAuth = async () => {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Auth Error:", err);
-            }
-        };
+        // تسجيل الدخول
+        auth.signInAnonymously().catch(err => console.error("Auth Failed", err));
 
-        initAuth();
-
-        onAuthStateChanged(auth, user => {
-            currentUser = user;
+        auth.onAuthStateChanged(user => {
             if(user) {
-                initApp();
+                currentUser = user;
+                renderMenu();
             }
         });
 
-        function initApp() {
+        function renderMenu() {
             const grid = document.getElementById('menu-grid');
-            if(!grid) return;
             grid.innerHTML = '';
             MENU.forEach(item => {
                 const el = document.createElement('div');
-                el.className = 'menu-item bg-white p-6 rounded-[2.5rem] text-center border-2 border-transparent premium-shadow cursor-pointer';
+                el.className = 'menu-item bg-white p-6 rounded-[2.5rem] text-center border border-stone-100 premium-shadow cursor-pointer';
                 el.innerHTML = `
                     <div class="text-3xl mb-2">${item.icon}</div>
                     <div class="font-bold text-xs">${item.name}</div>
@@ -175,81 +153,75 @@
             const table = document.getElementById('cust-table').value;
             if(selectedItems.length > 0 && table) {
                 btn.disabled = false;
-                btn.classList.remove('bg-stone-200', 'text-stone-400');
-                btn.classList.add('bg-[#3c2a21]', 'text-white');
+                btn.className = btn.className.replace('bg-stone-200 text-stone-400', 'bg-[#3c2a21] text-white');
             } else {
                 btn.disabled = true;
-                btn.classList.add('bg-stone-200', 'text-stone-400');
-                btn.classList.remove('bg-[#3c2a21]', 'text-white');
+                btn.className = btn.className.replace('bg-[#3c2a21] text-white', 'bg-stone-200 text-stone-400');
             }
         }
-        document.getElementById('cust-table').oninput = validate;
+        document.getElementById('cust-table').addEventListener('input', validate);
 
         document.getElementById('submit-order').onclick = async () => {
-            if (!currentUser) return;
+            if(!currentUser) return;
             const table = document.getElementById('cust-table').value;
             const btn = document.getElementById('submit-order');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال';
             
             try {
-                // Using correct public data path (Rule 1)
-                const orderRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
-                    table, items: selectedItems, status: 'received', timestamp: serverTimestamp(), uid: currentUser.uid
+                const orderRef = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('orders').add({
+                    table, items: selectedItems, status: 'received', timestamp: firebase.firestore.FieldValue.serverTimestamp(), uid: currentUser.uid
                 });
 
                 document.getElementById('phase-order').classList.add('hidden');
                 document.getElementById('phase-tracking').classList.remove('hidden');
                 
-                startTracking(orderRef.id);
-                startChat(orderRef.id);
+                trackStatus(orderRef.id);
+                initChat(orderRef.id);
             } catch (e) {
-                console.error("Order Error:", e);
-                btn.innerHTML = 'خطأ في الإرسال - حاول مرة أخرى';
+                btn.innerHTML = 'خطأ! حاول ثانية';
+                console.error(e);
             }
         };
 
-        function startTracking(orderId) {
-            if (!currentUser) return;
-            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId), (snap) => {
-                const data = snap.data();
-                if (!data) return;
-                const steps = { received: 'step-received', preparing: 'step-preparing', delivering: 'step-delivering' };
-                const lines = { received: '0%', preparing: '50%', delivering: '100%' };
-                const texts = { received: 'تم استلام طلبك بالمطبخ', preparing: 'شيف القهوة يحضر طلبك الآن', delivering: 'طلبك في الطريق إليك!' };
+        function trackStatus(orderId) {
+            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('orders').doc(orderId)
+                .onSnapshot(snap => {
+                    const data = snap.data();
+                    if(!data) return;
+                    const steps = { received: 'step-received', preparing: 'step-preparing', delivering: 'step-delivering' };
+                    const lines = { received: '5%', preparing: '50%', delivering: '100%' };
+                    const texts = { received: 'تم استلام طلبك', preparing: 'جاري تحضير القهوة', delivering: 'الطلب في الطريق!' };
 
-                Object.values(steps).forEach(s => document.getElementById(s).classList.add('opacity-20'));
-                if (steps[data.status]) {
-                    document.getElementById(steps[data.status]).classList.remove('opacity-20');
-                    document.getElementById(steps[data.status]).classList.add('opacity-100');
-                    document.getElementById('progress-line').style.width = lines[data.status];
-                    document.getElementById('status-text').innerText = texts[data.status];
-                }
-            }, (err) => console.error("Tracking Error:", err));
+                    ['step-received', 'step-preparing', 'step-delivering'].forEach(s => document.getElementById(s).style.opacity = '0.2');
+                    if(steps[data.status]) {
+                        document.getElementById(steps[data.status]).style.opacity = '1';
+                        document.getElementById('progress-line').style.width = lines[data.status];
+                        document.getElementById('status-text').innerText = texts[data.status];
+                    }
+                });
         }
 
-        function startChat(orderId) {
-            if (!currentUser) return;
-            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats', orderId, 'messages');
-            onSnapshot(query(chatRef, orderBy('timestamp')), (snap) => {
+        function initChat(orderId) {
+            const chatCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('chats').doc(orderId).collection('messages');
+            
+            chatCol.orderBy('timestamp').onSnapshot(snap => {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = '';
                 snap.forEach(d => {
                     const m = d.data();
-                    const el = document.createElement('div');
                     const isCust = m.sender === 'customer';
-                    el.className = `chat-msg p-3 rounded-2xl text-[11px] ${isCust ? 'bg-[#d4a373] text-white' : 'bg-stone-100 text-stone-800'}`;
-                    el.style.marginLeft = isCust ? '0' : 'auto';
-                    el.style.marginRight = isCust ? 'auto' : '0';
+                    const el = document.createElement('div');
+                    el.className = `chat-msg p-3 rounded-2xl text-[11px] ${isCust ? 'bg-[#d4a373] text-white self-start' : 'bg-stone-100 text-stone-800 self-end'}`;
                     el.innerText = m.text;
                     box.appendChild(el);
                 });
                 box.scrollTop = box.scrollHeight;
-            }, (err) => console.error("Chat Error:", err));
+            });
 
-            document.getElementById('btn-send-chat').onclick = async () => {
+            document.getElementById('btn-send-chat').onclick = () => {
                 const input = document.getElementById('chat-input');
-                if(!input.value || !currentUser) return;
-                await addDoc(chatRef, { text: input.value, sender: 'customer', timestamp: serverTimestamp() });
+                if(!input.value) return;
+                chatCol.add({ text: input.value, sender: 'customer', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
                 input.value = '';
             };
         }

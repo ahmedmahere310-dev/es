@@ -1,111 +1,258 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taskflow AI - المساعد الذكي</title>
+    <title>Coffee Spark - طلب العميل</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.39.0",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background-color: #fdfaf7; color: #3c2a21; }
+        .premium-shadow { box-shadow: 0 20px 50px rgba(60, 42, 33, 0.05); }
+        .menu-item { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .menu-item.selected { transform: scale(0.95); border-color: #d4a373; background-color: #fff9f0; }
+        .progress-bar { transition: width 1s ease-in-out; }
+        .chat-msg { max-width: 85%; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-['IBM_Plex_Sans_Arabic']">
+<body class="min-h-screen pb-10">
 
     <!-- Header -->
-    <header class="bg-white border-b sticky top-0 z-40 shadow-sm px-4 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">T</div>
-            <h1 class="font-bold text-lg">تاسك فلو <span class="text-indigo-600">AI</span></h1>
+    <div class="bg-[#3c2a21] text-white px-6 py-10 rounded-b-[3.5rem] mb-8 shadow-2xl relative overflow-hidden">
+        <div class="relative z-10">
+            <h1 class="text-3xl font-900 tracking-tighter">COFFEE SPARK</h1>
+            <p class="text-xs opacity-60 mt-1 italic">Experience the art of coffee</p>
         </div>
-        <div class="flex items-center gap-4">
-            <div class="text-left hidden sm:block">
-                <div class="text-[10px] uppercase font-black text-slate-400">التأثير العالمي</div>
-                <div id="totalPoints" class="text-sm font-bold text-indigo-600">0 نقطة</div>
+        <div class="absolute -right-10 -bottom-10 opacity-10 text-[150px] rotate-12">
+            <i class="fas fa-mug-hot"></i>
+        </div>
+    </div>
+
+    <main class="max-w-md mx-auto px-5">
+        
+        <!-- Order Phase: Entry -->
+        <div id="phase-order" class="space-y-6">
+            <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100">
+                <label class="text-[10px] font-bold text-stone-400 block mb-2 px-2 uppercase tracking-widest">رقم الطاولة</label>
+                <input type="number" id="cust-table" placeholder="أدخل رقم طاولتك" 
+                    class="w-full bg-stone-50 border-none rounded-2xl p-4 text-xl font-bold text-center focus:ring-2 focus:ring-[#d4a373] outline-none">
             </div>
-            <button id="btnCommunity" class="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+
+            <div class="flex items-center justify-between px-2">
+                <h3 class="font-900 text-lg">المنيو المفضل</h3>
+                <span class="text-[10px] bg-stone-100 px-3 py-1 rounded-full text-stone-500">طازج يومياً</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4" id="menu-grid">
+                <!-- Items generated via JS -->
+            </div>
+
+            <button id="submit-order" disabled class="w-full bg-stone-200 text-stone-400 py-5 rounded-[2rem] font-black text-lg transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3">
+                إرسال الطلب
+                <i class="fas fa-paper-plane text-sm"></i>
             </button>
         </div>
-    </header>
 
-    <main class="max-w-7xl mx-auto px-4 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Sidebar -->
-        <div class="lg:col-span-4 space-y-6">
-            <div class="bg-white p-8 rounded-3xl border border-indigo-100 shadow-xl text-center">
-                <div id="timerDisplay" class="text-5xl font-black mb-8 tabular-nums">25:00</div>
-                <button id="btnTimer" class="w-full py-4 rounded-2xl font-black text-sm uppercase bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:scale-[1.02] active:scale-95 transition-all">ابدأ التركيز</button>
+        <!-- Tracking Phase -->
+        <div id="phase-tracking" class="hidden space-y-6">
+            <div class="bg-white rounded-[2.5rem] p-8 premium-shadow text-center">
+                <div class="text-xs text-stone-400 mb-6 font-bold uppercase">حالة الطلب المباشرة</div>
+                
+                <div class="relative py-4">
+                    <div class="flex justify-between mb-8 relative z-10">
+                        <div id="step-received" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-receipt"></i></div>
+                            <span class="text-[10px] font-bold">استلام</span>
+                        </div>
+                        <div id="step-preparing" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-fire-burner"></i></div>
+                            <span class="text-[10px] font-bold">تحضير</span>
+                        </div>
+                        <div id="step-delivering" class="flex flex-col items-center gap-2 opacity-20 transition-all duration-500">
+                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-moped"></i></div>
+                            <span class="text-[10px] font-bold">توصيل</span>
+                        </div>
+                    </div>
+                    <!-- Connector line -->
+                    <div class="absolute top-10 left-0 w-full h-1 bg-stone-100 -z-0 rounded-full">
+                        <div id="progress-line" class="h-full bg-[#d4a373] progress-bar w-0 rounded-full"></div>
+                    </div>
+                </div>
+                
+                <p id="status-text" class="text-sm font-bold text-[#d4a373] mt-4 animate-pulse">جاري تأكيد طلبك...</p>
             </div>
-            
-            <div class="bg-white p-6 rounded-3xl border shadow-sm">
-                <h2 class="font-bold mb-4">إضافة سريعة بالذكاء الاصطناعي</h2>
-                <textarea id="aiInput" placeholder="مثال: تمرين رياضي لمدة ساعة، مراجعة ايميلات الشغل (عاجل)..." class="w-full h-24 p-4 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 outline-none text-sm resize-none mb-3"></textarea>
-                <button id="btnExtract" class="w-full py-3 bg-slate-900 text-white rounded-xl font-bold text-sm hover:bg-slate-800 disabled:opacity-50">حلل وأضف</button>
-            </div>
-        </div>
 
-        <!-- Task List -->
-        <div class="lg:col-span-8 space-y-4">
-            <div id="aiPlanContainer" class="hidden animate-toast"></div>
-            <div class="flex justify-between items-center px-2">
-                <h2 class="text-sm font-black text-slate-400 uppercase tracking-widest">قائمة المهام</h2>
-                <select id="sortTasks" class="bg-transparent text-xs font-bold text-indigo-600 outline-none">
-                    <option value="status">الأحدث</option>
-                    <option value="priority">الأولوية</option>
-                </select>
-            </div>
-            <div id="taskList" class="space-y-3">
-                <!-- المهام ستظهر هنا -->
+            <!-- Chat Container -->
+            <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100 flex flex-col h-[350px]">
+                <div class="flex items-center justify-between mb-4 border-b pb-4">
+                    <h4 class="font-900 text-sm">دردشة الطاولة</h4>
+                    <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                </div>
+                
+                <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 px-2 mb-4 scroll-smooth">
+                    <!-- Messages -->
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="اكتب استفسارك..." 
+                        class="flex-1 bg-stone-50 border-none rounded-2xl px-5 py-3 text-xs outline-none focus:ring-1 focus:ring-[#d4a373]">
+                    <button id="btn-send-chat" class="bg-[#3c2a21] text-white w-12 h-12 rounded-2xl shadow-lg active:scale-90 transition-all">
+                        <i class="fas fa-location-arrow -rotate-45"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Floating Widget (الويدجت العائم) -->
-    <div id="focusWidget" class="fixed bottom-6 left-6 z-50 hidden transition-all duration-500">
-        <div class="bg-white border border-indigo-100 p-5 rounded-[2rem] shadow-2xl w-72 ring-8 ring-indigo-50/50">
-            <div class="flex justify-between items-center mb-3">
-                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">التركيز الحالي</span>
-                <span class="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></span>
-            </div>
-            <h3 id="widgetTaskTitle" class="font-bold text-slate-800 text-sm mb-4 line-clamp-2">لا توجد مهام حالياً</h3>
-            <div class="flex gap-2">
-                <button id="btnWidgetComplete" class="flex-1 py-2.5 bg-indigo-600 text-white rounded-2xl text-[10px] font-bold uppercase hover:bg-indigo-700 transition-colors">إنجاز سريع ✅</button>
-                <button id="btnWidgetJump" class="w-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 hover:text-indigo-600">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                </button>
-            </div>
-        </div>
-    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    <!-- Community Sidebar -->
-    <div id="communityPanel" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden flex justify-end">
-        <div class="w-full max-w-sm bg-white h-full shadow-2xl animate-slide flex flex-col">
-            <div class="p-6 bg-indigo-600 text-white flex justify-between items-center">
-                <h2 class="text-xl font-bold">المجتمع العالمي</h2>
-                <button id="btnCloseCommunity" class="p-2 hover:bg-white/10 rounded-full">✕</button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-6" id="communityContent">
-                <div class="bg-indigo-50 p-6 rounded-3xl text-center border border-indigo-100">
-                    <div class="text-xs font-bold text-indigo-400 uppercase mb-1">ترتيبك اليومي</div>
-                    <div class="text-4xl font-black text-indigo-600">#1,402</div>
-                </div>
-            </div>
-        </div>
-    </div>
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'spark-v5';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 hidden pointer-events-none">
-        <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl text-sm font-bold"></div>
-    </div>
+        let currentUser = null;
+        let selectedItems = [];
+        const MENU = [
+            { name: 'لاتيه بارد', icon: '🧊', price: 65 },
+            { name: 'كابتشينو', icon: '☕', price: 55 },
+            { name: 'كريب نوتيلا', icon: '🍫', price: 90 },
+            { name: 'فرابيه كراميل', icon: '🥤', price: 75 }
+        ];
 
-    <script type="module" src="script.js"></script>
+        // Ensure Auth before any Firestore calls (Rule 3)
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Error:", err);
+            }
+        };
+
+        initAuth();
+
+        onAuthStateChanged(auth, user => {
+            currentUser = user;
+            if(user) {
+                initApp();
+            }
+        });
+
+        function initApp() {
+            const grid = document.getElementById('menu-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
+            MENU.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'menu-item bg-white p-6 rounded-[2.5rem] text-center border-2 border-transparent premium-shadow cursor-pointer';
+                el.innerHTML = `
+                    <div class="text-3xl mb-2">${item.icon}</div>
+                    <div class="font-bold text-xs">${item.name}</div>
+                    <div class="text-[9px] text-stone-400 mt-1">${item.price} ج.م</div>
+                `;
+                el.onclick = () => {
+                    el.classList.toggle('selected');
+                    if(selectedItems.includes(item.name)) selectedItems = selectedItems.filter(i => i !== item.name);
+                    else selectedItems.push(item.name);
+                    validate();
+                };
+                grid.appendChild(el);
+            });
+        }
+
+        function validate() {
+            const btn = document.getElementById('submit-order');
+            const table = document.getElementById('cust-table').value;
+            if(selectedItems.length > 0 && table) {
+                btn.disabled = false;
+                btn.classList.remove('bg-stone-200', 'text-stone-400');
+                btn.classList.add('bg-[#3c2a21]', 'text-white');
+            } else {
+                btn.disabled = true;
+                btn.classList.add('bg-stone-200', 'text-stone-400');
+                btn.classList.remove('bg-[#3c2a21]', 'text-white');
+            }
+        }
+        document.getElementById('cust-table').oninput = validate;
+
+        document.getElementById('submit-order').onclick = async () => {
+            if (!currentUser) return;
+            const table = document.getElementById('cust-table').value;
+            const btn = document.getElementById('submit-order');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال';
+            
+            try {
+                // Using correct public data path (Rule 1)
+                const orderRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'orders'), {
+                    table, items: selectedItems, status: 'received', timestamp: serverTimestamp(), uid: currentUser.uid
+                });
+
+                document.getElementById('phase-order').classList.add('hidden');
+                document.getElementById('phase-tracking').classList.remove('hidden');
+                
+                startTracking(orderRef.id);
+                startChat(orderRef.id);
+            } catch (e) {
+                console.error("Order Error:", e);
+                btn.innerHTML = 'خطأ في الإرسال - حاول مرة أخرى';
+            }
+        };
+
+        function startTracking(orderId) {
+            if (!currentUser) return;
+            onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'orders', orderId), (snap) => {
+                const data = snap.data();
+                if (!data) return;
+                const steps = { received: 'step-received', preparing: 'step-preparing', delivering: 'step-delivering' };
+                const lines = { received: '0%', preparing: '50%', delivering: '100%' };
+                const texts = { received: 'تم استلام طلبك بالمطبخ', preparing: 'شيف القهوة يحضر طلبك الآن', delivering: 'طلبك في الطريق إليك!' };
+
+                Object.values(steps).forEach(s => document.getElementById(s).classList.add('opacity-20'));
+                if (steps[data.status]) {
+                    document.getElementById(steps[data.status]).classList.remove('opacity-20');
+                    document.getElementById(steps[data.status]).classList.add('opacity-100');
+                    document.getElementById('progress-line').style.width = lines[data.status];
+                    document.getElementById('status-text').innerText = texts[data.status];
+                }
+            }, (err) => console.error("Tracking Error:", err));
+        }
+
+        function startChat(orderId) {
+            if (!currentUser) return;
+            const chatRef = collection(db, 'artifacts', appId, 'public', 'data', 'chats', orderId, 'messages');
+            onSnapshot(query(chatRef, orderBy('timestamp')), (snap) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                snap.forEach(d => {
+                    const m = d.data();
+                    const el = document.createElement('div');
+                    const isCust = m.sender === 'customer';
+                    el.className = `chat-msg p-3 rounded-2xl text-[11px] ${isCust ? 'bg-[#d4a373] text-white' : 'bg-stone-100 text-stone-800'}`;
+                    el.style.marginLeft = isCust ? '0' : 'auto';
+                    el.style.marginRight = isCust ? 'auto' : '0';
+                    el.innerText = m.text;
+                    box.appendChild(el);
+                });
+                box.scrollTop = box.scrollHeight;
+            }, (err) => console.error("Chat Error:", err));
+
+            document.getElementById('btn-send-chat').onclick = async () => {
+                const input = document.getElementById('chat-input');
+                if(!input.value || !currentUser) return;
+                await addDoc(chatRef, { text: input.value, sender: 'customer', timestamp: serverTimestamp() });
+                input.value = '';
+            };
+        }
+    </script>
 </body>
 </html>

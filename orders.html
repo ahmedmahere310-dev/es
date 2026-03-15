@@ -517,7 +517,10 @@ window.submitOrder = async () => {
       user_phone: shippingData.phone,
       user_address: `${shippingData.city}, ${shippingData.address}`,
       total_price: calcTotal() + " EGP",
-      items_details: cart.map(i => `${i.name} (${i.size || 'N/A'})`).join(', '),
+items_details: cart.map(i => 
+  `${i.name} (المقاس: ${i.size || 'N/A'}, اللون: ${i.color || 'N/A'})`
+).join(' - '),
+      
       user_email: "ahmedmahere310@gmail.com" // بريدك الشخصي لتلقي الإشعارات
     };
     

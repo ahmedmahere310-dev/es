@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Es Store | الطلبات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1410">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function() {
+    // استبدل YOUR_PUBLIC_KEY بمفتاحك من موقع EmailJS
+    emailjs.init("vrb428eeLHUh64q-v");
+  })();
+</script>
+<style>
+  :root { --accent:#c8a96e; --accent2:#a8894e; --bg:#f7f3ee; --card:#ffffff; --border:#e8e0d5; --text:#1a1410; --sub:#8a7e72; }
+  .dm { --bg:#0f0d0b; --card:#1a1713; --border:#2e2820; --text:#f0ebe4; --sub:#6a5e52; }
+  .logo-font { font-family:'Playfair Display',serif; }
+  body { font-family:'Cairo',sans-serif; background:var(--bg); color:var(--text); transition:background .3s,color .3s; }
+  .gold-line { height:1px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
+  .nav-link { position:relative; padding-bottom:2px; }
+  .nav-link::after { content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:var(--accent); transition:width .3s; }
+  .nav-link:hover::after,.nav-link.active::after { width:100%; }
+  .nav-link.active { color:var(--accent); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+  .fade-up { animation:fadeUp .5s ease forwards; }
+  .step.active .step-num { background:var(--accent); color:#000; border-color:var(--accent); }
+  .step.active .step-label { color:var(--accent); }
+  .step.done .step-num { background:#22c55e; color:#fff; border-color:#22c55e; }
+  input,select,textarea { outline:none!important; }
+  input:focus,select:focus,textarea:focus { border-color:var(--accent)!important; }
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-thumb { background:var(--accent); border-radius:10px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px 24px; transition:background .3s,border-color .3s; }
+  .field { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 16px; font-size:13px; font-family:'Cairo',sans-serif; color:var(--text); transition:border-color .2s; }
+
+        /* ── Track Order ── */
+        .track-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:12px; transition:background .3s,border-color .3s; }
+        .status-timeline { display:flex; flex-direction:column; gap:0; margin-top:16px; }
+        .tl-step { display:flex; gap:12px; align-items:flex-start; position:relative; }
+        .tl-step:not(:last-child) .tl-line { position:absolute; right:13px; top:28px; width:2px; height:calc(100% + 4px); background:var(--border); }
+        .tl-dot { width:26px; height:26px; border-radius:50%; border:2px solid var(--border); background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; z-index:1; transition:all .3s; }
+        .tl-dot.done { background:var(--accent); border-color:var(--accent); color:#000; }
+        .tl-dot.current { background:#fff; border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 3px rgba(200,169,110,.2); }
+        .tl-content { padding-bottom:20px; flex:1; }
+        .tl-label { font-size:12px; font-weight:700; color:var(--text); }
+        .tl-sub   { font-size:10px; color:var(--sub); margin-top:2px; }
+
+        </style>
+</head>
+<body class="pt-20">
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-[100] backdrop-blur-md border-b transition-colors duration-300" id="main-nav"
+     style="background:rgba(247,243,238,0.9);border-color:var(--border);">
+  <div class="max-w-3xl mx-auto px-6 h-16 flex justify-between items-center">
+    <a href="index.html" class="logo-font text-3xl font-black italic" style="color:var(--text)">Es</a>
+    <div class="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest" style="color:var(--text)">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="shop.html" class="nav-link">Shop</a>
+      <a href="orders.html" class="nav-link active">Orders</a>
+                <a href="#" onclick="event.preventDefault();showTrackView()" class="nav-link" style="color:var(--accent);font-size:9px;">تتبع ←</a>
+      
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-3xl mx-auto px-6 py-10">
+
+  <!-- HEADER -->
+  <div class="text-center mb-10 fade-up">
+    <p class="text-[10px] font-black uppercase tracking-[.4em] text-[var(--accent)] mb-2">إتمام الشراء</p>
+    <h1 class="logo-font text-5xl font-black italic" style="color:var(--text)">Your Order</h1>
+    <div class="gold-line w-32 mx-auto mt-5"></div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="flex items-center justify-center gap-3 mb-12 fade-up">
+    <div class="step flex flex-col items-center gap-1" id="step-1">
+      <div class="step-num w-9 h-9 rounded-full border-2 flex items-center justify-center font-black text-sm transition-all duration-300" style="border-color:var(--border);color:var(--sub)">1</div>
+      <span class="step-label text-[9px] font-black uppercase tracking-wider transition-all duration-300" style="color:var(--sub)">السلة</span>
+    </div>
+    <div class="flex-1 max-w-16 h-px" style="background:var(--border)"></div>
+    <div class="step flex flex-col items-center gap-1" id="step-2">
+      <div class="step-num w-9 h-9 rounded-full border-2 flex items-center justify-center font-black text-sm transition-all duration-300" style="border-color:var(--border);color:var(--sub)">2</div>
+      <span class="step-label text-[9px] font-black uppercase tracking-wider transition-all duration-300" style="color:var(--sub)">الشحن</span>
+    </div>
+    <div class="flex-1 max-w-16 h-px" style="background:var(--border)"></div>
+    <div class="step flex flex-col items-center gap-1" id="step-3">
+      <div class="step-num w-9 h-9 rounded-full border-2 flex items-center justify-center font-black text-sm transition-all duration-300" style="border-color:var(--border);color:var(--sub)">3</div>
+      <span class="step-label text-[9px] font-black uppercase tracking-wider transition-all duration-300" style="color:var(--sub)">تأكيد</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: CART -->
+  <div id="view-cart">
+    <div id="cart-items" class="space-y-4 mb-8"></div>
+    <div id="empty-cart" class="hidden text-center py-16">
+      <p class="text-6xl mb-4">🛒</p>
+      <h3 class="text-xl font-black italic mb-3" style="color:var(--text)">سلتك فارغة</h3>
+      <p class="text-sm mb-8" style="color:var(--sub)">أضف بعض القطع المميزة أولاً</p>
+      <a href="shop.html" class="inline-block bg-[var(--accent)] text-black px-10 py-4 rounded-full font-black text-xs uppercase tracking-widest hover:opacity-90 transition">تصفح المنتجات →</a>
+    </div>
+    <div id="order-summary" class="hidden">
+      <div class="gold-line mb-6"></div>
+      <div class="flex justify-between items-center mb-3">
+        <span class="text-xs font-bold uppercase tracking-widest" style="color:var(--sub)">المجموع الفرعي</span>
+        <span id="subtotal" class="font-black text-lg" style="color:var(--text)"></span>
+      </div>
+      <div class="flex justify-between items-center mb-5">
+        <span class="text-xs font-bold uppercase tracking-widest" style="color:var(--sub)">الشحن</span>
+        <span class="font-black text-sm text-green-500">مجاني</span>
+      </div>
+      <div class="gold-line mb-5"></div>
+      <div class="flex justify-between items-center mb-8">
+        <span class="text-sm font-black uppercase tracking-wider" style="color:var(--text)">الإجمالي</span>
+        <span id="total-display" class="font-black text-2xl text-[var(--accent)]"></span>
+      </div>
+      <button onclick="goToStep2()" style="width:100%;background:var(--text);color:var(--bg);padding:16px;border-radius:14px;font-size:11px;font-weight:900;letter-spacing:.25em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+        متابعة للشحن →
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: SHIPPING -->
+  <div id="view-shipping" class="hidden max-w-lg mx-auto">
+    <h2 class="text-xl font-black italic text-center mb-8" style="color:var(--text)">بيانات الشحن</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="text-[9px] font-black uppercase tracking-widest block mb-2" style="color:var(--sub)">الاسم الكامل *</label>
+        <input type="text" id="sh-name" placeholder="ماهر أحمد" class="field">
+      </div>
+      <div>
+        <label class="text-[9px] font-black uppercase tracking-widest block mb-2" style="color:var(--sub)">رقم الهاتف *</label>
+        <input type="tel" id="sh-phone" placeholder="01xxxxxxxxx" class="field">
+      </div>
+      <div>
+        <label class="text-[9px] font-black uppercase tracking-widest block mb-2" style="color:var(--sub)">المحافظة *</label>
+        <select id="sh-city" class="field">
+          <option value="">اختر المحافظة</option>
+          <option>القاهرة</option><option>الجيزة</option><option>الإسكندرية</option>
+          <option>الإسماعيلية</option><option>السويس</option><option>بورسعيد</option>
+          <option>المنوفية</option><option>الشرقية</option><option>الدقهلية</option>
+          <option>البحيرة</option><option>الغربية</option><option>كفر الشيخ</option>
+          <option>دمياط</option><option>الفيوم</option><option>بني سويف</option>
+          <option>المنيا</option><option>أسيوط</option><option>سوهاج</option>
+          <option>قنا</option><option>الأقصر</option><option>أسوان</option>
+          <option>البحر الأحمر</option><option>مطروح</option><option>شمال سيناء</option>
+          <option>جنوب سيناء</option><option>الوادي الجديد</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[9px] font-black uppercase tracking-widest block mb-2" style="color:var(--sub)">العنوان التفصيلي *</label>
+        <textarea id="sh-address" placeholder="الشارع، البناية، الشقة..." class="field" style="height:80px;resize:none;"></textarea>
+      </div>
+      <div>
+        <label class="text-[9px] font-black uppercase tracking-widest block mb-2" style="color:var(--sub)">ملاحظات (اختياري)</label>
+        <input type="text" id="sh-notes" placeholder="أي ملاحظات للطلب..." class="field">
+      </div>
+    </div>
+    <div class="gold-line my-6"></div>
+    <div id="sh-error" class="hidden text-center text-xs font-bold mb-4" style="color:#c0392b;">⚠️ يرجى تعبئة جميع الحقول المطلوبة</div>
+    <div class="flex gap-3">
+      <button onclick="goToStep1()" style="flex:1;border:2px solid var(--border);background:transparent;color:var(--text);padding:14px;border-radius:12px;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">← رجوع</button>
+      <button onclick="goToStep3()" style="flex:2;background:var(--text);color:var(--bg);padding:14px;border-radius:12px;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">مراجعة الطلب →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: CONFIRM -->
+  <div id="view-confirm" class="hidden max-w-lg mx-auto">
+    <h2 class="text-xl font-black italic text-center mb-8" style="color:var(--text)">مراجعة وتأكيد</h2>
+    <div class="card mb-4">
+      <p class="text-[9px] font-black uppercase tracking-widest text-[var(--accent)] mb-4">بيانات الشحن</p>
+      <p id="confirm-name" class="font-black text-sm mb-1" style="color:var(--text)"></p>
+      <p id="confirm-phone" class="text-xs mb-1" style="color:var(--sub)"></p>
+      <p id="confirm-address" class="text-xs" style="color:var(--sub)"></p>
+    </div>
+    <div class="card mb-4">
+      <p class="text-[9px] font-black uppercase tracking-widest text-[var(--accent)] mb-4">المنتجات</p>
+      <div id="confirm-items" class="space-y-2"></div>
+    </div>
+    <div class="flex justify-between items-center mb-8 px-1">
+      <span class="font-black uppercase tracking-wider text-sm" style="color:var(--text)">الإجمالي</span>
+      <span id="confirm-total" class="font-black text-2xl text-[var(--accent)]"></span>
+    </div>
+    <div id="confirm-error" class="hidden text-center text-xs font-bold mb-4" style="color:#c0392b;"></div>
+    <div class="flex gap-3">
+      <button onclick="goToStep2()" style="flex:1;border:2px solid var(--border);background:transparent;color:var(--text);padding:14px;border-radius:12px;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">← رجوع</button>
+      <button id="confirm-btn" onclick="submitOrder()" style="flex:1;background:var(--accent);color:#000;padding:14px;border-radius:12px;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;border:none;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">✅ تأكيد الطلب</button>
+    </div>
+  </div>
+
+  <!-- SUCCESS -->
+  <div id="view-success" class="hidden text-center py-14 fade-up">
+    <div class="text-7xl mb-5">🎉</div>
+    <h2 class="text-4xl font-black italic logo-font mb-3" style="color:var(--text)">تم الطلب بنجاح!</h2>
+    <div class="gold-line w-24 mx-auto my-5"></div>
+    <p class="text-sm mb-2" style="color:var(--sub)">شكراً لثقتك في <span class="text-[var(--accent)] font-black">Es Store</span></p>
+    <p class="text-sm mb-8" style="color:var(--sub)">سيتواصل معك فريقنا خلال 24 ساعة</p>
+    <div class="card inline-block px-8 py-5 mb-8">
+      <p class="text-[9px] font-black uppercase tracking-widest mb-1" style="color:var(--sub)">رقم الطلب — احتفظ به للتتبع</p>
+      <p id="order-ref-num" class="font-black text-[var(--accent)] text-xl font-mono"></p>
+    </div>
+    <br>
+    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+            <button onclick="showTrackView()" style="background:var(--accent);color:#000;border:none;padding:14px 40px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;transition:opacity .2s;" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">📦 تتبع طلبك</button>
+            <a href="shop.html" style="display:inline-block;color:var(--sub);padding:10px 24px;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;text-decoration:underline;">متابعة التسوق →</a>
+        </div>
+  </div>
+
+</div>
+
+<footer class="py-8 text-center border-t mt-8" style="border-color:var(--border);">
+  <p class="logo-font text-2xl italic mb-1" style="color:var(--text)">Es</p>
+  <p class="text-[9px] tracking-widest uppercase" style="color:var(--sub)">© 2026 Es Store</p>
+</footer>
+
+
+<script>
+// Early definitions — before module loads
+function showTrackView() {
+    if (window._showView) { window._showView('track'); return; }
+    // Queue it if module not loaded yet
+    window._pendingView = 'track';
+}
+function trackMyOrder() {
+    if (window._trackMyOrder) { window._trackMyOrder(); return; }
+    window._pendingTrack = true;
+}
+</script>
+
+<script type="module">
+import { rdb, ref, push, set, get, DB_ROOT } from './fire.js';
+
+// ── THEME (reads from localStorage set by settings.html) ──
+const applyTheme = () => {
+  const dark = localStorage.getItem('es_theme') === 'dark';
+  document.body.classList.toggle('dm', dark);
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.style.background = dark ? 'rgba(15,13,11,0.9)' : 'rgba(247,243,238,0.9)';
+};
+applyTheme();
+window.addEventListener('storage', e => { if (e.key === 'es_theme' || e.key === 'es_theme_update') applyTheme(); });
+
+// ── CART ──
+let cart = JSON.parse(localStorage.getItem('es_cart') || '[]');
+let shippingData = {};
+
+const calcTotal = () => cart.reduce((s, i) => s + parseFloat(i.price || 0), 0);
+
+function renderCart() {
+  const container  = document.getElementById('cart-items');
+  const emptyDiv   = document.getElementById('empty-cart');
+  const summaryDiv = document.getElementById('order-summary');
+  if (!cart.length) { container.innerHTML=''; emptyDiv.classList.remove('hidden'); summaryDiv.classList.add('hidden'); return; }
+  emptyDiv.classList.add('hidden'); summaryDiv.classList.remove('hidden');
+  container.innerHTML = cart.map((item, i) => `
+    <div class="card flex items-center gap-4">
+      <img src="${item.image||''}" class="w-16 h-20 object-cover rounded-xl"
+           onerror="this.src='https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg'">
+      <div class="flex-1 text-right">
+        <h4 class="font-black text-sm italic truncate" style="color:var(--text)">${item.name}</h4>
+        <p class="text-xs mt-1" style="color:var(--sub)">
+          ${item.size ? `المقاس: <span style="color:var(--accent);font-weight:700">${item.size}</span>` : ''}
+          ${item.color ? ` · ${item.color}` : ''}
+        </p>
+        <p class="text-[var(--accent)] font-black mt-2">${item.price} EGP</p>
+      </div>
+      <button onclick="removeItem(${i})" style="width:30px;height:30px;border-radius:999px;background:#fee2e2;color:#c0392b;border:none;cursor:pointer;font-weight:700;font-size:12px;">✕</button>
+    </div>`).join('');
+  const total = calcTotal();
+  document.getElementById('subtotal').textContent    = `${total} EGP`;
+  document.getElementById('total-display').textContent = `${total} EGP`;
+}
+
+window.removeItem = (i) => {
+  cart.splice(i, 1);
+  localStorage.setItem('es_cart', JSON.stringify(cart));
+  renderCart();
+};
+
+// ── STEPS ──
+function setStep(n) {
+  [1,2,3].forEach(s => {
+    const el = document.getElementById(`step-${s}`);
+    el.classList.remove('active','done');
+    if (s < n)  { el.classList.add('done');   el.querySelector('.step-num').textContent='✓'; }
+    if (s === n) { el.classList.add('active'); el.querySelector('.step-num').textContent=s; }
+    if (s > n)   el.querySelector('.step-num').textContent = s;
+  });
+  ['cart','shipping','confirm'].forEach((v,idx) => {
+    document.getElementById(`view-${v}`).classList.toggle('hidden', idx+1 !== n);
+  });
+}
+
+window.goToStep1 = () => setStep(1);
+
+window.goToStep2 = () => {
+  if (!cart.length) return;
+  setStep(2);
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+window.goToStep3 = () => {
+  const name    = document.getElementById('sh-name').value.trim();
+  const phone   = document.getElementById('sh-phone').value.trim();
+  const city    = document.getElementById('sh-city').value;
+  const address = document.getElementById('sh-address').value.trim();
+  if (!name||!phone||!city||!address) { document.getElementById('sh-error').classList.remove('hidden'); return; }
+  document.getElementById('sh-error').classList.add('hidden');
+  shippingData = { name, phone, city, address, notes: document.getElementById('sh-notes').value.trim() };
+  document.getElementById('confirm-name').textContent    = `${name} — ${city}`;
+  document.getElementById('confirm-phone').textContent   = phone;
+  document.getElementById('confirm-address').textContent = address + (shippingData.notes ? ` · ${shippingData.notes}` : '');
+  document.getElementById('confirm-items').innerHTML = cart.map(item => `
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;">
+      <span style="color:var(--text);font-weight:700;">${item.name}${item.size?` (${item.size})`:''}</span>
+      <span style="color:var(--accent);font-weight:900;">${item.price} EGP</span>
+    </div>`).join('');
+  document.getElementById('confirm-total').textContent = `${calcTotal()} EGP`;
+  document.getElementById('view-confirm').classList.remove('hidden');
+  document.getElementById('view-shipping').classList.add('hidden');
+  document.getElementById('view-cart').classList.add('hidden');
+  document.querySelectorAll('.step').forEach((el,idx)=>{ el.classList.remove('active','done'); if(idx<2)el.classList.add('done'); if(idx===2)el.classList.add('active'); el.querySelector('.step-num').textContent=idx<2?'✓':3; });
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+window.submitOrder = async () => {
+  const btn    = document.getElementById('confirm-btn');
+  const errDiv = document.getElementById('confirm-error');
+  btn.disabled=true; btn.textContent='جاري الإرسال...';
+  try {
+    const orderRef = push(ref(rdb, `${DB_ROOT}/orders`));
+    await set(orderRef, { items:cart, shipping:shippingData, total:calcTotal(), status:'pending', createdAt:Date.now() });
+    localStorage.removeItem('es_cart');
+    cart = [];
+    ['view-confirm','view-cart','view-shipping'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('view-success').classList.remove('hidden');
+    document.getElementById('order-ref-num').textContent = orderRef.key.slice(-8).toUpperCase();
+    localStorage.setItem('es_last_order_ref', orderRef.key.slice(-8).toUpperCase());
+    window.scrollTo({top:0,behavior:'smooth'});
+  } catch(e) {
+    console.error(e);
+    errDiv.textContent = '❌ تعذر إرسال الطلب — تحقق من اتصالك';
+    errDiv.classList.remove('hidden');
+    btn.disabled=false; btn.textContent='✅ تأكيد الطلب';
+  }
+};
+
+renderCart();
+
+// Register SW
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+        // ── showView helper (if not already defined) ──
+        window.showView = window.showView || function(v) {
+            ['cart','shipping','confirm','success','track'].forEach(n => {
+                const el = document.getElementById('view-'+n);
+                if (el) el.classList.add('hidden');
+            });
+            const t = document.getElementById('view-'+v);
+            if (t) t.classList.remove('hidden');
+        };
+
+        window.showTrackView = () => window._showView ? window._showView('track') : showView('track');
+
+        // ── Expose to global scope (fixes onclick before module loads) ──
+        window._showView = (v) => {
+            ['cart','shipping','confirm','success','track'].forEach(n => {
+                const el = document.getElementById('view-'+n);
+                if (el) el.classList.add('hidden');
+            });
+            const t = document.getElementById('view-'+v);
+            if (t) t.classList.remove('hidden');
+        };
+        window._trackMyOrder = window.trackMyOrder;
+        window.showTrackView = () => window._showView('track');
+        window.showView      = window._showView;
+
+        // Handle queued calls from before module loaded
+        if (window._pendingView) { window._showView(window._pendingView); window._pendingView = null; }
+        if (window._pendingTrack) { window.trackMyOrder && window.trackMyOrder(); window._pendingTrack = false; }
+
+
+        // ── Status steps definition ──
+        const STATUS_STEPS = [
+            { key:'pending',   icon:'⏳', label:'قيد الانتظار',     sub:'جاري مراجعة طلبك' },
+            { key:'confirmed', icon:'✅', label:'تم التأكيد',        sub:'طلبك مؤكد وجاري تجهيزه' },
+            { key:'shipped',   icon:'🚚', label:'في الطريق إليك',    sub:'طلبك خرج للتوصيل' },
+            { key:'delivered', icon:'📬', label:'تم التسليم',        sub:'استلمت طلبك بنجاح' },
+        ];
+
+        const STATUS_ORDER = { pending:0, confirmed:1, shipped:2, delivered:3, cancelled:-1 };
+
+        window.trackMyOrder = async () => {
+            const input  = document.getElementById('tr-input').value.trim().toUpperCase();
+            const errEl  = document.getElementById('tr-error');
+            const resEl  = document.getElementById('tr-result');
+            errEl.style.display = 'none';
+            resEl.style.display = 'none';
+
+            if (input.length < 4) {
+                errEl.textContent = '⚠️ أدخل رقم الطلب (8 أحرف)';
+                errEl.style.display = 'block'; return;
+            }
+
+            // Show loading
+            errEl.style.display = 'none';
+            errEl.textContent = '⏳ جاري البحث...';
+            errEl.style.color = 'var(--sub)';
+            errEl.style.display = 'block';
+
+            try {
+                const snap = await get(ref(rdb, `${DB_ROOT}/orders`));
+                errEl.style.display = 'none';
+
+                if (!snap.exists()) {
+                    errEl.textContent = '❌ لا توجد طلبات'; errEl.style.color='#c0392b'; errEl.style.display='block'; return;
+                }
+
+                const found = Object.entries(snap.val()).find(([id]) => id.slice(-8).toUpperCase() === input);
+                if (!found) {
+                    errEl.textContent = '❌ رقم الطلب غير موجود — تحقق من الرقم'; errEl.style.color='#c0392b'; errEl.style.display='block'; return;
+                }
+
+                const [id, o] = found;
+                renderTrackResult(id, o);
+            } catch(e) {
+                errEl.textContent = '❌ خطأ في الاتصال، حاول مجدداً'; errEl.style.color='#c0392b'; errEl.style.display='block';
+            }
+        };
+
+        function renderTrackResult(id, o) {
+            const resEl  = document.getElementById('tr-result');
+            const status = o.status || 'pending';
+            const refNum = id.slice(-8).toUpperCase();
+
+            // Info
+            document.getElementById('tr-name').textContent  = o.shipping?.name  || '---';
+            document.getElementById('tr-phone').textContent = o.shipping?.phone || '';
+            document.getElementById('tr-city').textContent  = o.shipping?.city  || '';
+            document.getElementById('tr-total').textContent = o.total + ' EGP';
+            document.getElementById('tr-ref').textContent   = '#' + refNum;
+
+            // Items
+            document.getElementById('tr-items').innerHTML = (o.items||[]).map(i =>
+                `<span style="font-size:10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--sub);">${i.name}${i.size?' ('+i.size+')':''}</span>`
+            ).join('');
+
+            // Timeline
+            const curIdx = STATUS_ORDER[status] ?? 0;
+            let tlHTML = '';
+
+            if (status === 'cancelled') {
+                tlHTML = `<div class="tl-step">
+                    <div class="tl-dot done" style="background:#c0392b;border-color:#c0392b;color:#fff;">✕</div>
+                    <div class="tl-content">
+                        <div class="tl-label" style="color:#c0392b;">❌ تم إلغاء الطلب</div>
+                        <div class="tl-sub">تواصل معنا لمزيد من التفاصيل</div>
+                    </div>
+                </div>`;
+            } else {
+                tlHTML = STATUS_STEPS.map((step, idx) => {
+                    const isDone    = idx < curIdx;
+                    const isCurrent = idx === curIdx;
+                    const dotClass  = isDone ? 'done' : isCurrent ? 'current' : '';
+                    const icon      = isDone ? '✓' : step.icon;
+                    const isLast    = idx === STATUS_STEPS.length - 1;
+                    return `<div class="tl-step">
+                        ${!isLast ? '<div class="tl-line"></div>' : ''}
+                        <div class="tl-dot ${dotClass}">${icon}</div>
+                        <div class="tl-content">
+                            <div class="tl-label" style="${isCurrent ? 'color:var(--accent);font-size:13px;' : ''}">${step.label}${isCurrent ? ' ◀' : ''}</div>
+                            ${isCurrent ? `<div class="tl-sub">${step.sub}</div>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            document.getElementById('tr-timeline').innerHTML = tlHTML;
+            resEl.style.display = 'block';
+        }
+
+        // لو في رقم طلب محفوظ من آخر طلب → افتح التتبع مباشرة
+        const lastOrder = localStorage.getItem('es_last_order_ref');
+        if (lastOrder && location.hash === '#track') {
+            showTrackView();
+            document.getElementById('tr-input').value = lastOrder;
+            trackMyOrder();
+        }
+
+window.submitOrder = async () => {
+  const btn = document.getElementById('confirm-btn');
+  const errDiv = document.getElementById('confirm-error');
+  btn.disabled = true;
+  btn.textContent = 'جاري الإرسال...';
+  
+  try {
+    // 1. الحفظ في Firebase (الكود الحالي الخاص بك)
+    const orderRef = push(ref(rdb, `${DB_ROOT}/orders`));
+    const orderData = {
+      items: cart,
+      shipping: shippingData,
+      total: calcTotal(),
+      status: 'pending',
+      createdAt: Date.now()
+    };
+    await set(orderRef, orderData);
+    
+    // 2. إرسال الإيميل عبر EmailJS
+    const emailParams = {
+      order_id: orderRef.key.slice(-8).toUpperCase(),
+      user_name: shippingData.name,
+      user_phone: shippingData.phone,
+      user_address: `${shippingData.city}, ${shippingData.address}`,
+      total_price: calcTotal() + " EGP",
+      items_details: cart.map(i => `${i.name} (${i.size || 'N/A'})`).join(', '),
+      user_email: "maher@example.com" // بريدك الشخصي لتلقي الإشعارات
+    };
+    
+    // استبدل الأكواد بالقيم الخاصة بحسابك في EmailJS
+    await emailjs.send('service_erih35c', 'template_sz7avjj', emailParams);
+    
+    // 3. عرض شاشة النجاح (الكود الحالي)
+    localStorage.removeItem('es_cart');
+    cart = [];
+    ['view-confirm', 'view-cart', 'view-shipping'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('view-success').classList.remove('hidden');
+    document.getElementById('order-ref-num').textContent = orderRef.key.slice(-8).toUpperCase();
+    localStorage.setItem('es_last_order_ref', orderRef.key.slice(-8).toUpperCase());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+  } catch (e) {
+    console.error(e);
+    errDiv.textContent = '❌ تعذر إرسال الطلب — تحقق من اتصالك';
+    errDiv.classList.remove('hidden');
+    btn.disabled = false;
+    btn.textContent = '✅ تأكيد الطلب';
+  }
+};
+    </script>
+
+    <!-- ── TRACK ORDER VIEW ── -->
+    <div id="view-track" class="hidden max-w-lg mx-auto py-8 px-4">
+        <div class="text-center mb-8">
+            <p style="font-size:10px;font-weight:700;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">تتبع طلبك</p>
+            <h2 style="font-size:36px;font-weight:900;color:var(--text);letter-spacing:1px;">TRACK ORDER</h2>
+            <div style="height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:16px auto;width:80px;"></div>
+        </div>
+
+        <!-- Search box -->
+        <div class="track-box">
+            <p style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;">أدخل رقم طلبك</p>
+            <div style="display:flex;gap:8px;">
+                <input id="tr-input" type="text" placeholder="مثال: A1B2C3D4"
+                       oninput="this.value=this.value.toUpperCase()"
+                       style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:13px;font-family:monospace;letter-spacing:.15em;color:var(--text);outline:none;transition:border-color .2s;"
+                       onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"
+                       onkeydown="if(event.key==='Enter')trackMyOrder()">
+                <button onclick="trackMyOrder()"
+                        style="background:var(--text);color:var(--bg);border:none;border-radius:10px;padding:0 20px;font-size:11px;font-weight:900;letter-spacing:.15em;cursor:pointer;white-space:nowrap;transition:opacity .2s;"
+                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">بحث</button>
+            </div>
+            <p id="tr-error" style="display:none;color:#c0392b;font-size:11px;font-weight:700;margin-top:10px;text-align:center;"></p>
+        </div>
+
+        <!-- Result -->
+        <div id="tr-result" style="display:none;">
+            <!-- Order info card -->
+            <div class="track-box" style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+                    <div>
+                        <p id="tr-name" style="font-size:15px;font-weight:900;color:var(--text);"></p>
+                        <p id="tr-phone" style="font-size:11px;color:var(--sub);margin-top:2px;"></p>
+                        <p id="tr-city"  style="font-size:11px;color:var(--sub);"></p>
+                    </div>
+                    <div style="text-align:left;">
+                        <p id="tr-total" style="font-size:20px;font-weight:900;color:var(--accent);font-family:monospace;"></p>
+                        <p id="tr-ref"   style="font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--sub);margin-top:2px;"></p>
+                    </div>
+                </div>
+                <!-- Items -->
+                <div id="tr-items" style="border-top:1px solid var(--border);padding-top:12px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+            </div>
+
+            <!-- Status timeline -->
+            <div class="track-box">
+                <p style="font-size:10px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;">حالة الطلب</p>
+                <div class="status-timeline" id="tr-timeline"></div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px;">
+            <button onclick="showView('cart')"
+                    style="font-size:10px;font-weight:700;color:var(--sub);background:transparent;border:none;cursor:pointer;text-decoration:underline;">
+                ← رجوع للسلة
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>

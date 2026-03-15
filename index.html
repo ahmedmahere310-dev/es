@@ -3,228 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee Spark - طلب العميل</title>
+    <title>Es Store | الرئيسية</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
-    <!-- استيراد مكتبات فايربيس بطريقة التوافق المباشر مع المتصفح -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap');
-        body { font-family: 'Tajawal', sans-serif; background-color: #fdfaf7; color: #3c2a21; }
-        .premium-shadow { box-shadow: 0 20px 50px rgba(60, 42, 33, 0.05); }
-        .menu-item { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .menu-item.selected { transform: scale(0.95); border-color: #d4a373; background-color: #fff9f0; border-width: 2px; }
-        .progress-bar { transition: width 1s ease-in-out; }
-        .chat-msg { max-width: 85%; animation: slideUp 0.3s ease-out; margin-bottom: 8px; }
-        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        :root {
+            --accent: #c8a96e;
+            --accent-light: #e8d5b0;
+        }
+        .logo-font { font-family: 'Playfair Display', serif; }
+        body { font-family: 'Cairo', sans-serif; }
+
+        /* Product card image zoom */
+        .product-card:hover img { transform: scale(1.08); }
+
+        /* Gold shimmer on logo */
+        .logo-shine {
+            background: linear-gradient(90deg, #fff 0%, var(--accent) 50%, #fff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shine 4s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Hero overlay gradient */
+        .hero-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.1) 100%);
+        }
+
+        /* Card fade-in on load */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fadeUp 0.6s ease forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+
+        /* Gold divider */
+        .gold-line { height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        /* Dark mode card bg */
+        .dark .card-bg { background-color: #18181b; }
+        .card-bg { background-color: #f4f4f5; }
+
+        /* Nav link hover underline */
+        .nav-link { position: relative; padding-bottom: 2px; }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0; height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .nav-link.active { color: var(--accent); }
     </style>
+    <link rel="manifest" href="manifest.json">
 </head>
-<body class="min-h-screen pb-10">
+<body class="bg-white dark:bg-zinc-950 transition-colors duration-500">
 
-    <div class="bg-[#3c2a21] text-white px-6 py-10 rounded-b-[3.5rem] mb-8 shadow-2xl relative overflow-hidden">
-        <div class="relative z-10">
-            <h1 class="text-3xl font-900 tracking-tighter">COFFEE SPARK</h1>
-            <p class="text-xs opacity-60 mt-1 italic">Experience the art of coffee</p>
-        </div>
-        <div class="absolute -right-10 -bottom-10 opacity-10 text-[150px] rotate-12">
-            <i class="fas fa-mug-hot"></i>
-        </div>
-    </div>
-
-    <main class="max-w-md mx-auto px-5">
-        <div id="phase-order" class="space-y-6">
-            <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100">
-                <label class="text-[10px] font-bold text-stone-400 block mb-2 px-2 uppercase tracking-widest">رقم الطاولة</label>
-                <input type="number" id="cust-table" placeholder="أدخل رقم طاولتك" 
-                    class="w-full bg-stone-50 border-none rounded-2xl p-4 text-xl font-bold text-center focus:ring-2 focus:ring-[#d4a373] outline-none">
-            </div>
-
-            <div class="flex items-center justify-between px-2">
-                <h3 class="font-900 text-lg text-stone-800">المنيو المفضل</h3>
-                <span class="text-[10px] bg-stone-100 px-3 py-1 rounded-full text-stone-500">طازج يومياً</span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-4" id="menu-grid"></div>
-
-            <button id="submit-order" disabled class="w-full bg-stone-200 text-stone-400 py-5 rounded-[2rem] font-black text-lg transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3">
-                إرسال الطلب
-                <i class="fas fa-paper-plane text-sm"></i>
-            </button>
-        </div>
-
-        <div id="phase-tracking" class="hidden space-y-6">
-            <div class="bg-white rounded-[2.5rem] p-8 premium-shadow text-center">
-                <div class="text-xs text-stone-400 mb-6 font-bold uppercase">حالة الطلب المباشرة</div>
-                <div class="relative py-4">
-                    <div class="flex justify-between mb-8 relative z-10">
-                        <div id="step-received" class="flex flex-col items-center gap-2 opacity-20">
-                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-receipt"></i></div>
-                            <span class="text-[10px] font-bold">استلام</span>
-                        </div>
-                        <div id="step-preparing" class="flex flex-col items-center gap-2 opacity-20">
-                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-fire-burner"></i></div>
-                            <span class="text-[10px] font-bold">تحضير</span>
-                        </div>
-                        <div id="step-delivering" class="flex flex-col items-center gap-2 opacity-20">
-                            <div class="w-12 h-12 bg-white rounded-2xl shadow-md flex items-center justify-center text-xl border border-stone-100"><i class="fas fa-moped"></i></div>
-                            <span class="text-[10px] font-bold">توصيل</span>
-                        </div>
-                    </div>
-                    <div class="absolute top-10 left-0 w-full h-1 bg-stone-100 -z-0 rounded-full">
-                        <div id="progress-line" class="h-full bg-[#d4a373] progress-bar w-0 rounded-full"></div>
-                    </div>
-                </div>
-                <p id="status-text" class="text-sm font-bold text-[#d4a373] mt-4 animate-pulse">جاري تأكيد طلبك...</p>
-            </div>
-
-            <div class="bg-white rounded-[2.5rem] p-6 premium-shadow border border-stone-100 flex flex-col h-[350px]">
-                <div class="flex items-center justify-between mb-4 border-b pb-4">
-                    <h4 class="font-900 text-sm">دردشة الطاولة</h4>
-                    <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
-                </div>
-                <div id="chat-box" class="flex-1 overflow-y-auto space-y-3 px-2 mb-4 flex flex-col"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="chat-input" placeholder="اكتب استفسارك..." 
-                        class="flex-1 bg-stone-50 border-none rounded-2xl px-5 py-3 text-xs outline-none focus:ring-1 focus:ring-[#d4a373]">
-                    <button id="btn-send-chat" class="bg-[#3c2a21] text-white w-12 h-12 rounded-2xl shadow-lg active:scale-90 transition-all">
-                        <i class="fas fa-location-arrow -rotate-45"></i>
-                    </button>
-                </div>
+    <!-- NAV -->
+    <nav class="fixed top-0 w-full z-[100] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="index.html" class="logo-font text-4xl font-black italic dark:text-white">Es</a>
+            <div class="flex items-center gap-8 text-[11px] font-black uppercase tracking-widest dark:text-white">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="shop.html" class="nav-link">Shop</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <!-- Dark mode toggle -->
+                <button class="t-toggle" onclick="toggleTheme()" title="تبديل الوضع"></button>
             </div>
         </div>
-    </main>
+    </nav>
 
-    <script>
-        // إعدادات فايربيس
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'spark-v5';
-        
-        // بدء التشغيل
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+    <!-- HERO -->
+    <header class="h-screen relative flex items-end justify-center bg-zinc-900 overflow-hidden">
+        <img src="https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg"
+             class="absolute inset-0 w-full h-full object-cover opacity-80">
+        <div class="hero-overlay absolute inset-0"></div>
+        <div class="relative text-center text-white px-4 pb-24">
+            <p class="text-[10px] tracking-[0.6em] uppercase text-zinc-300 mb-6">مجموعة 2026</p>
+            <h1 class="logo-font text-7xl md:text-9xl font-black italic mb-4 logo-shine">Premium Menswear</h1>
+            <div class="gold-line w-40 mx-auto my-6"></div>
+            <p class="text-sm tracking-widest text-zinc-300 mb-10">استكشف أناقة حقيقية — قطع صُممت لتدوم</p>
+            <a href="shop.html"
+               class="inline-block border border-[var(--accent)] text-[var(--accent)] px-12 py-4 rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-[var(--accent)] hover:text-black transition-all duration-300">
+                Shop Now
+            </a>
+        </div>
+    </header>
 
-        let currentUser = null;
-        let selectedItems = [];
-        const MENU = [
-            { name: 'لاتيه بارد', icon: '🧊', price: 65 },
-            { name: 'كابتشينو', icon: '☕', price: 55 },
-            { name: 'كريب نوتيلا', icon: '🍫', price: 90 },
-            { name: 'فرابيه كراميل', icon: '🥤', price: 75 }
-        ];
+    <!-- NEW ARRIVALS -->
+    <section class="max-w-7xl mx-auto px-6 py-28">
+        <div class="flex justify-between items-end mb-14">
+            <div>
+                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent)] mb-2">وصل حديثاً</p>
+                <h2 class="text-5xl font-black italic logo-font dark:text-white">New Arrivals</h2>
+            </div>
+            <a href="shop.html" class="text-[10px] font-black border-b-2 border-[var(--accent)] pb-1 text-[var(--accent)] hover:opacity-70 transition">عرض الكل ←</a>
+        </div>
+        <div class="gold-line mb-14"></div>
+        <div id="latest-grid" class="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <!-- skeleton -->
+            <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+        </div>
+    </section>
 
-        // تسجيل الدخول
-        auth.signInAnonymously().catch(err => console.error("Auth Failed", err));
+    <!-- BEST SELLERS -->
+    <section class="bg-zinc-50 dark:bg-zinc-900/40 py-28 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14">
+                <p class="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent)] mb-2">الأكثر طلباً</p>
+                <h2 class="text-5xl font-black italic logo-font dark:text-white">Best Sellers</h2>
+                <div class="gold-line w-32 mx-auto mt-6"></div>
+            </div>
+            <div id="best-sellers-grid" class="grid grid-cols-2 md:grid-cols-4 gap-10">
+                <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+                <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+                <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+                <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            </div>
+        </div>
+    </section>
 
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                currentUser = user;
-                renderMenu();
+    <!-- FOOTER -->
+    <footer class="py-12 text-center border-t border-zinc-100 dark:border-zinc-900">
+        <p class="logo-font text-3xl italic dark:text-white mb-2">Es</p>
+        <p class="text-[9px] tracking-widest text-zinc-400 uppercase">© 2026 Es Store — Premium Menswear</p>
+    </footer>
+
+    <script type="module">
+
+        // Apply theme from settings
+        (function() {
+            if (localStorage.getItem('es_theme') === 'dark') document.documentElement.classList.add('dark');
+        })();
+        window.addEventListener('storage', e => {
+            if (e.key === 'es_theme' || e.key === 'es_theme_update') {
+                document.documentElement.classList.toggle('dark', localStorage.getItem('es_theme') === 'dark');
             }
         });
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-        function renderMenu() {
-            const grid = document.getElementById('menu-grid');
-            grid.innerHTML = '';
-            MENU.forEach(item => {
-                const el = document.createElement('div');
-                el.className = 'menu-item bg-white p-6 rounded-[2.5rem] text-center border border-stone-100 premium-shadow cursor-pointer';
-                el.innerHTML = `
-                    <div class="text-3xl mb-2">${item.icon}</div>
-                    <div class="font-bold text-xs">${item.name}</div>
-                    <div class="text-[9px] text-stone-400 mt-1">${item.price} ج.م</div>
-                `;
-                el.onclick = () => {
-                    el.classList.toggle('selected');
-                    if(selectedItems.includes(item.name)) selectedItems = selectedItems.filter(i => i !== item.name);
-                    else selectedItems.push(item.name);
-                    validate();
-                };
-                grid.appendChild(el);
-            });
-        }
+        import { rdb, ref, onValue, DB_ROOT } from './fire.js';
 
-        function validate() {
-            const btn = document.getElementById('submit-order');
-            const table = document.getElementById('cust-table').value;
-            if(selectedItems.length > 0 && table) {
-                btn.disabled = false;
-                btn.className = btn.className.replace('bg-stone-200 text-stone-400', 'bg-[#3c2a21] text-white');
-            } else {
-                btn.disabled = true;
-                btn.className = btn.className.replace('bg-[#3c2a21] text-white', 'bg-stone-200 text-stone-400');
-            }
-        }
-        document.getElementById('cust-table').addEventListener('input', validate);
-
-        document.getElementById('submit-order').onclick = async () => {
-            if(!currentUser) return;
-            const table = document.getElementById('cust-table').value;
-            const btn = document.getElementById('submit-order');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال';
-            
-            try {
-                const orderRef = await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('orders').add({
-                    table, items: selectedItems, status: 'received', timestamp: firebase.firestore.FieldValue.serverTimestamp(), uid: currentUser.uid
-                });
-
-                document.getElementById('phase-order').classList.add('hidden');
-                document.getElementById('phase-tracking').classList.remove('hidden');
-                
-                trackStatus(orderRef.id);
-                initChat(orderRef.id);
-            } catch (e) {
-                btn.innerHTML = 'خطأ! حاول ثانية';
-                console.error(e);
-            }
+        // Dark mode
+        window.toggleDark = () => {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('theme-icon').textContent =
+                document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         };
-
-        function trackStatus(orderId) {
-            db.collection('artifacts').doc(appId).collection('public').doc('data').collection('orders').doc(orderId)
-                .onSnapshot(snap => {
-                    const data = snap.data();
-                    if(!data) return;
-                    const steps = { received: 'step-received', preparing: 'step-preparing', delivering: 'step-delivering' };
-                    const lines = { received: '5%', preparing: '50%', delivering: '100%' };
-                    const texts = { received: 'تم استلام طلبك', preparing: 'جاري تحضير القهوة', delivering: 'الطلب في الطريق!' };
-
-                    ['step-received', 'step-preparing', 'step-delivering'].forEach(s => document.getElementById(s).style.opacity = '0.2');
-                    if(steps[data.status]) {
-                        document.getElementById(steps[data.status]).style.opacity = '1';
-                        document.getElementById('progress-line').style.width = lines[data.status];
-                        document.getElementById('status-text').innerText = texts[data.status];
-                    }
-                });
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').textContent = '☀️';
         }
 
-        function initChat(orderId) {
-            const chatCol = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('chats').doc(orderId).collection('messages');
-            
-            chatCol.orderBy('timestamp').onSnapshot(snap => {
-                const box = document.getElementById('chat-box');
-                box.innerHTML = '';
-                snap.forEach(d => {
-                    const m = d.data();
-                    const isCust = m.sender === 'customer';
-                    const el = document.createElement('div');
-                    el.className = `chat-msg p-3 rounded-2xl text-[11px] ${isCust ? 'bg-[#d4a373] text-white self-start' : 'bg-stone-100 text-stone-800 self-end'}`;
-                    el.innerText = m.text;
-                    box.appendChild(el);
-                });
-                box.scrollTop = box.scrollHeight;
-            });
-
-            document.getElementById('btn-send-chat').onclick = () => {
-                const input = document.getElementById('chat-input');
-                if(!input.value) return;
-                chatCol.add({ text: input.value, sender: 'customer', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
-                input.value = '';
-            };
+        function renderList(arr) {
+            return arr.map(([id, p], i) => {
+                const img = p.mainImage || (p.colors && p.colors[0]?.images?.[0]) || p.image || '';
+                return `
+                <div class="product-card group cursor-pointer fade-up delay-${i+1}"
+                     onclick="location.href='product.html?id=${id}'">
+                    <div class="aspect-[3/4] rounded-3xl overflow-hidden card-bg relative shadow-md">
+                        <img src="${img}" class="w-full h-full object-cover transition duration-700"
+                             onerror="this.src='https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg'">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition duration-500"></div>
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-10 group-hover:translate-y-0 transition duration-500">
+                            <span class="bg-[var(--accent)] text-black text-[8px] px-5 py-2 rounded-full font-black uppercase tracking-widest shadow-xl whitespace-nowrap">عرض المنتج</span>
+                        </div>
+                    </div>
+                    <div class="mt-5 text-center px-2">
+                        <h4 class="font-black italic text-xs uppercase dark:text-white truncate">${p.name}</h4>
+                        <p class="text-[var(--accent)] font-bold text-[11px] mt-1">${p.price} EGP</p>
+                    </div>
+                </div>`;
+            }).join('');
         }
+
+        onValue(ref(rdb, `${DB_ROOT}/products`), (snap) => {
+            const data = snap.val();
+            if (!data) {
+                document.getElementById('latest-grid').innerHTML = '<p class="col-span-4 text-center text-zinc-400 py-10">لا توجد منتجات حالياً</p>';
+                document.getElementById('best-sellers-grid').innerHTML = '';
+                return;
+            }
+            const arr = Object.entries(data).reverse();
+            document.getElementById('latest-grid').innerHTML = renderList(arr.slice(0, 4));
+            document.getElementById('best-sellers-grid').innerHTML = renderList(arr.slice(4, 8));
+        });
     </script>
 </body>
 </html>

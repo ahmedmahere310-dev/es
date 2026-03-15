@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Es Store | تفاصيل المنتج</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #c8a96e; }
+        .logo-font { font-family: 'Playfair Display', serif; }
+        body { font-family: 'Cairo', sans-serif; }
+
+        .active-size { background: var(--accent) !important; color: #000 !important; border-color: var(--accent) !important; }
+        .thumb-active { border-color: var(--accent) !important; opacity: 1 !important; }
+
+        .color-dot { transition: all 0.2s ease; }
+        .color-dot.active-color { outline: 3px solid var(--accent); outline-offset: 3px; transform: scale(1.15); }
+
+        .nav-link { position: relative; padding-bottom: 2px; }
+        .nav-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--accent); transition: width 0.3s; }
+        .nav-link:hover::after { width: 100%; }
+
+        .gold-line { height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        #main-view { animation: fadeIn 0.4s ease; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+        .dark .card-bg { background-color: #18181b; }
+        .card-bg { background-color: #f4f4f5; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-white dark:bg-zinc-950 transition-colors pt-24">
+
+    <nav class="fixed top-0 w-full z-[100] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900 h-20 flex items-center px-6 justify-between">
+        <a href="index.html" class="logo-font text-3xl font-black italic dark:text-white">Es</a>
+        <div class="flex items-center gap-8 text-[11px] font-black uppercase tracking-widest dark:text-white">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="shop.html" class="nav-link">Shop</a>
+            <a href="orders.html" class="nav-link">Orders</a>
+            <button class="t-toggle" onclick="toggleTheme()" title="تبديل الوضع"></button>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="max-w-7xl mx-auto px-6 pt-6 pb-2">
+        <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">
+            <a href="index.html" class="hover:text-[var(--accent)] transition">Home</a>
+            <span class="mx-2">←</span>
+            <a href="shop.html" class="hover:text-[var(--accent)] transition">Shop</a>
+            <span class="mx-2">←</span>
+            <span id="breadcrumb-name" class="text-[var(--accent)]">المنتج</span>
+        </p>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Loading state -->
+        <div id="loading-state" class="grid grid-cols-1 lg:grid-cols-2 gap-16 animate-pulse">
+            <div class="aspect-[4/5] rounded-[2.5rem] card-bg shadow-2xl"></div>
+            <div class="flex flex-col justify-center gap-6">
+                <div class="h-12 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-3/4"></div>
+                <div class="h-6 bg-zinc-100 dark:bg-zinc-700 rounded-xl w-1/4"></div>
+                <div class="h-px bg-zinc-100 dark:bg-zinc-800"></div>
+                <div class="h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-full"></div>
+                <div class="h-8 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-full"></div>
+                <div class="h-14 bg-zinc-200 dark:bg-zinc-700 rounded-2xl w-full mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Product content (hidden until loaded) -->
+        <div id="product-content" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-16">
+
+            <!-- Gallery -->
+            <div class="space-y-5">
+                <div class="aspect-[4/5] rounded-[2.5rem] overflow-hidden card-bg shadow-2xl">
+                    <img id="main-view" src="" class="w-full h-full object-cover transition-all duration-500"
+                         onerror="this.src='https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg'">
+                </div>
+                <div id="thumb-container" class="flex gap-3 overflow-x-auto py-1 scrollbar-hide"></div>
+            </div>
+
+            <!-- Info -->
+            <div class="flex flex-col justify-center text-right space-y-8">
+                <!-- Name & Price -->
+                <div>
+                    <span id="p-category" class="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--accent)]"></span>
+                    <h1 id="p-name" class="text-5xl font-black dark:text-white mt-2 italic logo-font leading-tight">---</h1>
+                    <p id="p-price" class="text-3xl font-bold text-[var(--accent)] mt-3"></p>
+                </div>
+
+                <div class="gold-line"></div>
+
+                <!-- Colors -->
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-4">
+                        اللون: <span id="selected-color-name" class="text-[var(--accent)]"></span>
+                    </span>
+                    <div id="colors-list" class="flex gap-4 flex-wrap"></div>
+                </div>
+
+                <!-- Sizes -->
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400 block mb-4">المقاس</span>
+                    <div id="sizes-list" class="flex gap-3 flex-wrap"></div>
+                </div>
+
+                <div class="gold-line"></div>
+
+                <!-- CTA Buttons -->
+                <div class="flex gap-4 pt-2">
+                    <button onclick="addToCart()"
+                            class="flex-1 bg-black dark:bg-white dark:text-black text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition hover:bg-zinc-800 dark:hover:bg-zinc-200">
+                        🛒 إضافة للسلة
+                    </button>
+                    <button onclick="buyNow()"
+                            class="flex-1 border-2 border-[var(--accent)] text-[var(--accent)] py-5 rounded-2xl font-black text-xs uppercase tracking-widest dark:text-[var(--accent)] active:scale-95 transition hover:bg-[var(--accent)] hover:text-black">
+                        ⚡ شراء الآن
+                    </button>
+                </div>
+
+                <!-- Toast -->
+                <div id="toast" class="hidden text-center text-xs font-black text-green-600 dark:text-green-400 py-2">
+                    ✅ تم إضافة المنتج للسلة بنجاح!
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-10 text-center border-t border-zinc-100 dark:border-zinc-900 mt-10">
+        <p class="logo-font text-3xl italic dark:text-white mb-2">Es</p>
+        <p class="text-[9px] tracking-widest text-zinc-400 uppercase">© 2026 Es Store</p>
+    </footer>
+
+    <script type="module">
+
+        // Apply theme from settings
+        (function() {
+            if (localStorage.getItem('es_theme') === 'dark') document.documentElement.classList.add('dark');
+        })();
+        window.addEventListener('storage', e => {
+            if (e.key === 'es_theme' || e.key === 'es_theme_update') {
+                document.documentElement.classList.toggle('dark', localStorage.getItem('es_theme') === 'dark');
+            }
+        });
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+        import { rdb, ref, get, DB_ROOT } from './fire.js';
+
+        window.toggleDark = () => {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('theme-icon').textContent =
+                document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        };
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').textContent = '☀️';
+        }
+
+        const urlId = new URLSearchParams(location.search).get('id');
+        let productData = null;
+        let selectedSize = null;
+        let selectedColorIndex = 0;
+
+        async function loadProduct() {
+            if (!urlId) { showError(); return; }
+            try {
+                const snap = await get(ref(rdb, `${DB_ROOT}/products/${urlId}`));
+                if (!snap.exists()) { showError(); return; }
+                productData = snap.val();
+                initProduct();
+            } catch(e) {
+                console.error(e);
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('loading-state').innerHTML =
+                '<div class="col-span-2 text-center py-20"><p class="text-5xl mb-4">😕</p><p class="text-zinc-400 font-bold">المنتج غير موجود أو تعذر التحميل</p><a href="shop.html" class="inline-block mt-6 text-[var(--accent)] font-black text-sm underline">← العودة للمتجر</a></div>';
+        }
+
+        function initProduct() {
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('product-content').classList.remove('hidden');
+            document.getElementById('product-content').style.display = 'grid';
+
+            document.getElementById('p-name').innerText = productData.name;
+            document.getElementById('breadcrumb-name').innerText = productData.name;
+            document.getElementById('p-price').innerText = `${productData.price} EGP`;
+            if (productData.category) {
+                document.getElementById('p-category').innerText = productData.category;
+            }
+            document.title = `Es Store | ${productData.name}`;
+
+            // Sizes
+            const sizesDiv = document.getElementById('sizes-list');
+            const sizes = Array.isArray(productData.sizes) ? productData.sizes : [];
+            sizesDiv.innerHTML = sizes.map(sz => `
+                <button class="size-btn w-14 h-14 rounded-xl border-2 border-zinc-200 dark:border-zinc-700 dark:text-white font-bold text-xs transition hover:border-[var(--accent)]"
+                        onclick="selectSize(this, '${sz}')">${sz}</button>
+            `).join('') || '<span class="text-zinc-400 text-xs">لا توجد مقاسات محددة</span>';
+
+            // Colors
+            const colors = productData.colors || [];
+            const colorsDiv = document.getElementById('colors-list');
+            if (colors.length > 0) {
+                colorsDiv.innerHTML = colors.map((col, i) => `
+                    <div class="color-dot w-9 h-9 rounded-full cursor-pointer border-2 border-zinc-200 dark:border-zinc-700 shadow-sm"
+                         style="background-color: ${col.hex || col.name || '#888'}"
+                         title="${col.name || ''}"
+                         onclick="selectColor(${i})"></div>
+                `).join('');
+                selectColor(0);
+            } else if (productData.mainImage || productData.image) {
+                const img = productData.mainImage || productData.image;
+                document.getElementById('main-view').src = img;
+                colorsDiv.innerHTML = '<span class="text-zinc-400 text-xs">لون واحد متاح</span>';
+            }
+        }
+
+        window.selectSize = (btn, sz) => {
+            selectedSize = sz;
+            document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active-size'));
+            btn.classList.add('active-size');
+        };
+
+        window.selectColor = (index) => {
+            selectedColorIndex = index;
+            const colors = productData.colors || [];
+            const color = colors[index];
+            if (!color) return;
+
+            document.getElementById('selected-color-name').innerText = color.name || '';
+            document.querySelectorAll('.color-dot').forEach((d, i) => {
+                i === index ? d.classList.add('active-color') : d.classList.remove('active-color');
+            });
+
+            // Re-animate main image
+            const mainImg = document.getElementById('main-view');
+            mainImg.style.animation = 'none';
+            setTimeout(() => { mainImg.style.animation = ''; }, 10);
+
+            renderGallery(color.images || []);
+        };
+
+        function renderGallery(images) {
+            if (!images || images.length === 0) return;
+            const mainImg = document.getElementById('main-view');
+            const thumbContainer = document.getElementById('thumb-container');
+            mainImg.src = images[0];
+            thumbContainer.innerHTML = images.map((img, i) => `
+                <div class="flex-shrink-0 w-20 aspect-[4/5] rounded-xl overflow-hidden border-2 border-transparent opacity-60 cursor-pointer hover:opacity-100 transition"
+                     onclick="updateMainImg(this, '${img}')">
+                    <img src="${img}" class="w-full h-full object-cover"
+                         onerror="this.src='https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg'">
+                </div>
+            `).join('');
+            if (thumbContainer.children[0]) thumbContainer.children[0].classList.add('thumb-active');
+        }
+
+        window.updateMainImg = (el, src) => {
+            document.getElementById('main-view').src = src;
+            document.querySelectorAll('#thumb-container > div').forEach(d => d.classList.remove('thumb-active'));
+            el.classList.add('thumb-active');
+        };
+
+        window.addToCart = () => {
+            if (!productData) return;
+            const cart = JSON.parse(localStorage.getItem('es_cart') || '[]');
+            const color = (productData.colors || [])[selectedColorIndex];
+            cart.push({
+                id: urlId,
+                name: productData.name,
+                price: productData.price,
+                size: selectedSize,
+                color: color?.name || null,
+                image: document.getElementById('main-view').src
+            });
+            localStorage.setItem('es_cart', JSON.stringify(cart));
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        };
+
+        window.buyNow = () => {
+            addToCart();
+            location.href = 'orders.html';
+        };
+
+        loadProduct();
+    </script>
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Es Store | المتجر</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #c8a96e; --accent-light: #e8d5b0; }
+        .logo-font { font-family: 'Playfair Display', serif; }
+        body { font-family: 'Cairo', sans-serif; }
+
+        .product-card { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .product-card:hover { transform: translateY(-8px); }
+        .product-card:hover img { transform: scale(1.08); }
+
+        .filter-btn { transition: all 0.25s ease; }
+        .filter-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+        .dark .card-bg { background-color: #18181b; }
+        .card-bg { background-color: #f4f4f5; }
+
+        .gold-line { height: 1px; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+
+        .nav-link { position: relative; padding-bottom: 2px; }
+        .nav-link::after { content: ''; position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--accent); transition: width 0.3s ease; }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        .nav-link.active { color: var(--accent); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeUp 0.5s ease forwards; opacity: 0; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-white dark:bg-zinc-950 transition-colors duration-500 pt-24">
+
+    <nav class="fixed top-0 w-full z-[100] bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-900">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <a href="index.html" class="logo-font text-4xl font-black italic dark:text-white">Es</a>
+            <div class="flex items-center gap-8 text-[11px] font-black uppercase tracking-widest dark:text-white">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="shop.html" class="nav-link active">Shop</a>
+                <a href="orders.html" class="nav-link">Orders</a>
+                <button class="t-toggle" onclick="toggleTheme()" title="تبديل الوضع"></button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="max-w-7xl mx-auto px-6 py-12 text-center">
+        <p class="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--accent)] mb-3">كل القطع</p>
+        <h1 class="logo-font text-6xl font-black italic dark:text-white mb-8">The Collection</h1>
+        <div class="gold-line w-40 mx-auto mb-10"></div>
+
+        <!-- Search -->
+        <div class="max-w-md mx-auto mb-10 relative">
+            <input type="text" id="search-input"
+                   placeholder="ابحث عن قطعة محددة..."
+                   class="w-full bg-zinc-50 dark:bg-zinc-900 dark:text-white border border-zinc-200 dark:border-zinc-800 rounded-full px-8 py-4 focus:ring-2 focus:ring-[var(--accent)] outline-none transition text-sm">
+            <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400">🔍</span>
+        </div>
+
+        <!-- Filters -->
+        <div id="filter-container" class="flex flex-wrap justify-center gap-3"></div>
+    </section>
+
+    <!-- Products -->
+    <main class="max-w-7xl mx-auto px-6 pb-28">
+        <div id="shop-grid" class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-14"></div>
+        <div id="no-results" class="hidden text-center py-24">
+            <p class="text-6xl mb-4">🔍</p>
+            <p class="text-zinc-400 font-bold italic text-lg">لا يوجد منتجات تطابق بحثك</p>
+        </div>
+        <div id="loading" class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-14">
+            <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+            <div class="animate-pulse hidden md:block"><div class="aspect-[3/4] rounded-3xl card-bg mb-4"></div><div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-3/4 mx-auto mb-2"></div><div class="h-2 bg-zinc-100 dark:bg-zinc-700 rounded w-1/2 mx-auto"></div></div>
+        </div>
+    </main>
+
+    <footer class="py-10 text-center border-t border-zinc-100 dark:border-zinc-900">
+        <p class="logo-font text-3xl italic dark:text-white mb-2">Es</p>
+        <p class="text-[9px] tracking-widest text-zinc-400 uppercase">© 2026 Es Store</p>
+    </footer>
+
+    <script type="module">
+
+        // Apply theme from settings
+        (function() {
+            if (localStorage.getItem('es_theme') === 'dark') document.documentElement.classList.add('dark');
+        })();
+        window.addEventListener('storage', e => {
+            if (e.key === 'es_theme' || e.key === 'es_theme_update') {
+                document.documentElement.classList.toggle('dark', localStorage.getItem('es_theme') === 'dark');
+            }
+        });
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+        import { rdb, ref, onValue, DB_ROOT } from './fire.js';
+
+        window.toggleDark = () => {
+            document.documentElement.classList.toggle('dark');
+            document.getElementById('theme-icon').textContent =
+                document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        };
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-icon').textContent = '☀️';
+        }
+
+        let allProducts = [];
+        let activeCategory = 'all';
+
+        onValue(ref(rdb, `${DB_ROOT}/products`), (snap) => {
+            document.getElementById('loading').remove();
+            const data = snap.val();
+            if (!data) { displayProducts([]); return; }
+            allProducts = Object.entries(data).reverse();
+            generateCategoryButtons(allProducts);
+            displayProducts(allProducts);
+        });
+
+        function displayProducts(products) {
+            const grid = document.getElementById('shop-grid');
+            const noResults = document.getElementById('no-results');
+            if (products.length === 0) {
+                grid.innerHTML = '';
+                noResults.classList.remove('hidden');
+                return;
+            }
+            noResults.classList.add('hidden');
+            grid.innerHTML = products.map(([id, p]) => {
+                const img = p.mainImage || (p.colors && p.colors[0]?.images?.[0]) || p.image || '';
+                return `
+                <div class="product-card group cursor-pointer fade-up"
+                     data-category="${p.category}" onclick="location.href='product.html?id=${id}'">
+                    <div class="aspect-[3/4] rounded-3xl overflow-hidden card-bg relative shadow-md">
+                        <img src="${img}" class="w-full h-full object-cover transition duration-700"
+                             onerror="this.src='https://images.pexels.com/photos/1884581/pexels-photo-1884581.jpeg'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 translate-y-12 group-hover:translate-y-0 transition duration-500">
+                            <span class="bg-[var(--accent)] text-black text-[8px] px-5 py-2 rounded-full font-black uppercase tracking-widest shadow-xl whitespace-nowrap">عرض المنتج</span>
+                        </div>
+                        ${p.category ? `<span class="absolute top-4 right-4 bg-black/70 text-white text-[8px] px-3 py-1 rounded-full font-black uppercase tracking-wider">${p.category}</span>` : ''}
+                    </div>
+                    <div class="mt-5 text-center px-2">
+                        <h4 class="font-black italic text-xs uppercase dark:text-white truncate">${p.name}</h4>
+                        <p class="text-[var(--accent)] font-bold text-[11px] mt-1">${p.price} EGP</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // Search
+        document.getElementById('search-input').oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            let filtered = allProducts.filter(([, p]) => p.name.toLowerCase().includes(term));
+            if (activeCategory !== 'all') filtered = filtered.filter(([, p]) => p.category === activeCategory);
+            displayProducts(filtered);
+        };
+
+        // Filter
+        window.filterItems = (cat, el) => {
+            activeCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            const term = document.getElementById('search-input').value.toLowerCase();
+            let filtered = cat === 'all' ? allProducts : allProducts.filter(([, p]) => p.category === cat);
+            if (term) filtered = filtered.filter(([, p]) => p.name.toLowerCase().includes(term));
+            displayProducts(filtered);
+        };
+
+        function generateCategoryButtons(products) {
+            const categories = [...new Set(products.map(([, p]) => p.category).filter(Boolean))];
+            const container = document.getElementById('filter-container');
+            container.innerHTML = `
+                <button onclick="filterItems('all', this)"
+                        class="filter-btn active px-7 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-200 dark:border-zinc-800 dark:text-white transition">
+                    الكل
+                </button>
+                ${categories.map(cat => `
+                <button onclick="filterItems('${cat}', this)"
+                        class="filter-btn px-7 py-3 rounded-full text-[10px] font-black uppercase tracking-widest border border-zinc-200 dark:border-zinc-800 dark:text-white transition">
+                    ${cat}
+                </button>`).join('')}`;
+        }
+    </script>
+</body>
+</html>

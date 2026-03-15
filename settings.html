@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Es Store | الإعدادات</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a1410">
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Playfair+Display:ital,wght@1,900&display=swap" rel="stylesheet">
+<style>
+  :root { --accent:#c8a96e; }
+  .logo-font { font-family:'Playfair Display',serif; }
+  body { font-family:'Cairo',sans-serif; transition:background .3s,color .3s; }
+  .dark { background:#0f0d0b; color:#f0ebe4; }
+  .setting-card { background:#fff; border:1px solid #e8e0d5; border-radius:16px; padding:20px 24px; display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; transition:background .3s,border-color .3s; }
+  .dark .setting-card { background:#1a1713; border-color:#2e2820; }
+  .setting-title { font-size:14px; font-weight:700; }
+  .dark .setting-title { color:#f0ebe4; }
+  .setting-sub { font-size:11px; color:#8a7e72; margin-top:3px; }
+
+  /* THE TOGGLE SWITCH */
+  .switch { position:relative; width:52px; height:28px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; cursor:pointer; inset:0; background:#d0c8ba; border-radius:999px; transition:background .3s; }
+  .slider::before { content:''; position:absolute; height:20px; width:20px; left:4px; bottom:4px; background:#fff; border-radius:50%; transition:transform .3s; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  input:checked + .slider { background:var(--accent); }
+  input:checked + .slider::before { transform:translateX(24px); }
+
+  /* Install banner */
+  .install-btn { display:none; width:100%; padding:16px; background:#1a1410; color:#fff; border:none; border-radius:12px; font-size:12px; font-weight:900; letter-spacing:.25em; text-transform:uppercase; cursor:pointer; transition:background .2s; margin-bottom:12px; }
+  .dark .install-btn { background:var(--accent); color:#000; }
+  .install-btn:hover { opacity:.9; }
+
+  .nav-link { position:relative; padding-bottom:2px; }
+  .nav-link::after { content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:var(--accent); transition:width .3s; }
+  .nav-link:hover::after, .nav-link.active::after { width:100%; }
+  .nav-link.active { color:var(--accent); }
+
+  .gold-line { height:1px; background:linear-gradient(90deg,transparent,var(--accent),transparent); }
+</style>
+</head>
+<body class="bg-[#f7f3ee] pt-20" id="body">
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-[100] bg-white/90 backdrop-blur-md border-b border-[#e8e0d5]" id="nav">
+  <div class="max-w-2xl mx-auto px-6 h-16 flex justify-between items-center">
+    <a href="index.html" class="logo-font text-3xl font-black italic" id="logo">Es</a>
+    <div class="flex items-center gap-6 text-[10px] font-black uppercase tracking-widest">
+      <a href="index.html" class="nav-link" id="nl-home">Home</a>
+      <a href="shop.html" class="nav-link" id="nl-shop">Shop</a>
+      <a href="orders.html" class="nav-link" id="nl-orders">Orders</a>
+      <a href="settings.html" class="nav-link active" id="nl-settings">Settings</a>
+    </div>
+  </div>
+</nav>
+
+<main class="max-w-2xl mx-auto px-6 py-10">
+  <div class="mb-10">
+    <p class="text-[10px] font-black uppercase tracking-[.4em] text-[var(--accent)] mb-2">تخصيص التطبيق</p>
+    <h1 class="logo-font text-5xl font-black italic" id="page-title">Settings</h1>
+    <div class="gold-line mt-4"></div>
+  </div>
+
+  <!-- PWA Install -->
+  <button class="install-btn" id="install-btn" onclick="installPWA()">
+    📲 تثبيت التطبيق على الشاشة الرئيسية
+  </button>
+  <div id="installed-msg" style="display:none;" class="setting-card mb-3">
+    <div><div class="setting-title">✅ التطبيق مثبت</div><div class="setting-sub">يمكنك فتحه من الشاشة الرئيسية</div></div>
+  </div>
+
+  <!-- APPEARANCE -->
+  <p class="text-[9px] font-black uppercase tracking-[.4em] text-[#8a7e72] mb-3 mt-6">المظهر</p>
+
+  <div class="setting-card">
+    <div>
+      <div class="setting-title" id="t1">الوضع الليلي</div>
+      <div class="setting-sub">تبديل بين الوضع الفاتح والداكن</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="dark-toggle" onchange="toggleDark(this)">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <p class="text-[9px] font-black uppercase tracking-[.4em] text-[#8a7e72] mb-3 mt-6">الإشعارات</p>
+
+  <div class="setting-card">
+    <div>
+      <div class="setting-title" id="t2">إشعارات الطلبات</div>
+      <div class="setting-sub" id="notif-sub">تلقي إشعار عند كل طلب جديد</div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="notif-toggle" onchange="toggleNotifs(this)">
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- ABOUT -->
+  <p class="text-[9px] font-black uppercase tracking-[.4em] text-[#8a7e72] mb-3 mt-6">عن التطبيق</p>
+  <div class="setting-card">
+    <div><div class="setting-title" id="t3">Es Store</div><div class="setting-sub">Premium Menswear — v2.0</div></div>
+    <span class="text-[10px] font-black text-[var(--accent)]">2026</span>
+  </div>
+  <div class="setting-card">
+    <div><div class="setting-title" id="t4">تتبع طلب</div><div class="setting-sub">ابحث برقم طلبك</div></div>
+    <a href="orders.html#track" class="text-[10px] font-black text-[var(--accent)]">افتح ←</a>
+  </div>
+
+</main>
+
+<script>
+// ── THEME ──
+const applyTheme = () => {
+  const dark = localStorage.getItem('es_theme') === 'dark';
+  document.body.classList.toggle('dark', dark);
+  document.getElementById('nav').classList.toggle('dark', dark);
+  document.getElementById('dark-toggle').checked = dark;
+  // Nav text color
+  document.querySelectorAll('.nav-link, #logo, #page-title').forEach(el => {
+    el.style.color = dark ? '#f0ebe4' : '';
+  });
+  document.getElementById('nl-settings').style.color = '#c8a96e';
+  document.body.style.background = dark ? '#0f0d0b' : '#f7f3ee';
+};
+
+window.toggleDark = (el) => {
+  localStorage.setItem('es_theme', el.checked ? 'dark' : 'light');
+  applyTheme();
+  // Tell other tabs
+  localStorage.setItem('es_theme_update', Date.now());
+};
+
+applyTheme();
+
+// Listen for theme changes from other tabs
+window.addEventListener('storage', e => {
+  if (e.key === 'es_theme' || e.key === 'es_theme_update') applyTheme();
+});
+
+// ── NOTIFICATIONS ──
+const checkNotifStatus = () => {
+  if (!('Notification' in window)) {
+    document.getElementById('notif-sub').textContent = 'المتصفح لا يدعم الإشعارات';
+    document.getElementById('notif-toggle').disabled = true;
+    return;
+  }
+  const granted = Notification.permission === 'granted';
+  document.getElementById('notif-toggle').checked = granted;
+  document.getElementById('notif-sub').textContent = granted ? '✅ الإشعارات مفعّلة' : 'اضغط لتفعيل الإشعارات';
+};
+
+window.toggleNotifs = async (el) => {
+  if (!('Notification' in window)) { el.checked=false; return; }
+  if (Notification.permission === 'granted') {
+    // Already granted - can't revoke from JS, inform user
+    el.checked = true;
+    document.getElementById('notif-sub').textContent = '✅ مفعّلة — لإلغائها افتح إعدادات المتصفح';
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    el.checked = false;
+    document.getElementById('notif-sub').textContent = '❌ محجوبة — افتح إعدادات المتصفح وفعّلها';
+    return;
+  }
+  // Request permission
+  const p = await Notification.requestPermission();
+  if (p === 'granted') {
+    el.checked = true;
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.register('./sw.js').catch(console.error);
+    }
+    localStorage.setItem('es_notifs', 'granted');
+    document.getElementById('notif-sub').textContent = '✅ الإشعارات مفعّلة';
+    // Test notification
+    setTimeout(() => new Notification('✅ Es Store', { body: 'الإشعارات تعمل بنجاح!' }), 500);
+  } else {
+    el.checked = false;
+    document.getElementById('notif-sub').textContent = '❌ تم الرفض — غيّر الإعداد من المتصفح';
+  }
+};
+
+checkNotifStatus();
+
+// ── PWA INSTALL ──
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').style.display = 'none';
+  document.getElementById('installed-msg').style.display = 'flex';
+  deferredPrompt = null;
+});
+
+// Check if already installed
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+  document.getElementById('install-btn').style.display = 'none';
+  document.getElementById('installed-msg').style.display = 'flex';
+} else {
+  // Show install hint even without beforeinstallprompt (iOS)
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !window.navigator.standalone) {
+    const btn = document.getElementById('install-btn');
+    btn.style.display = 'block';
+    btn.textContent = '📲 على iOS: اضغط مشاركة ← أضف إلى الشاشة الرئيسية';
+    btn.onclick = null;
+  }
+}
+
+window.installPWA = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') document.getElementById('install-btn').style.display = 'none';
+  deferredPrompt = null;
+};
+
+// Register SW on page load
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(reg => {
+      console.log('✅ SW registered');
+      // Update notification status after registration
+      checkNotifStatus();
+    })
+    .catch(e => console.warn('SW registration failed:', e));
+}
+</script>
+</body>
+</html>

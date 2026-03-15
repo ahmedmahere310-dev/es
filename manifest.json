@@ -1,0 +1,25 @@
+{
+  "name": "Es Store",
+  "short_name": "Es",
+  "description": "Premium Menswear — جودة حقيقية",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1410",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    { "src": "l.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "m.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "l.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "m.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "shortcuts": [
+    { "name": "المتجر", "url": "/shop.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "طلباتي", "url": "/orders.html", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ],
+  "categories": ["shopping", "lifestyle"],
+  "prefer_related_applications": false
+}
